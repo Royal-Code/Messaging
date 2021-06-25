@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30709.64
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalCode.Messaging.Abstactions", "RoyalCode.Messaging.Abstactions\RoyalCode.Messaging.Abstactions.csproj", "{BE1EAD0F-6E3E-4F11-A719-6738725811F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.Messaging.Abstactions", "RoyalCode.Messaging.Abstactions\RoyalCode.Messaging.Abstactions.csproj", "{BE1EAD0F-6E3E-4F11-A719-6738725811F8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.Core.Messaging", "RoyalCode.Core.Messaging\RoyalCode.Core.Messaging.csproj", "{8B4384B6-37DE-45C1-9D1C-5A4F4E64DFF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{BE1EAD0F-6E3E-4F11-A719-6738725811F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE1EAD0F-6E3E-4F11-A719-6738725811F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE1EAD0F-6E3E-4F11-A719-6738725811F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B4384B6-37DE-45C1-9D1C-5A4F4E64DFF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B4384B6-37DE-45C1-9D1C-5A4F4E64DFF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B4384B6-37DE-45C1-9D1C-5A4F4E64DFF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B4384B6-37DE-45C1-9D1C-5A4F4E64DFF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
