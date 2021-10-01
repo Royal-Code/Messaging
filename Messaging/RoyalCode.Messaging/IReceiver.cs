@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace RoyalCode.Core.Messaging
+namespace RoyalCode.Messaging
 {
     /// <summary>
     /// Serviço que escuta filas de mensageria e repassa a mensagem para ouvintes.

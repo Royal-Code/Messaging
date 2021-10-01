@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RoyalCode.Core.Messaging
+namespace RoyalCode.Messaging
 {
     /// <summary>
     /// Mensagem recebida pelo cliente de um broker, a qual poderá ser escutada por um <see cref="IReceiver{TMessage}"/>;

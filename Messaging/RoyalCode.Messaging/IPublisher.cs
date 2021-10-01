@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoyalCode.Core.Messaging
+namespace RoyalCode.Messaging
 {
     /// <summary>
     /// Componente de mensageria para publicar de mensagem em um determinado canal.

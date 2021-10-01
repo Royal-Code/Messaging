@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RoyalCode.Core.Messaging
+namespace RoyalCode.Messaging
 {
     /// <summary>
     /// Uma mensagem para ser publicada pelo broker, gerada através de um <see cref="IPublisher{TMessage}"/>.
