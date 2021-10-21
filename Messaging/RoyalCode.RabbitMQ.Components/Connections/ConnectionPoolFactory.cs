@@ -3,8 +3,6 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace RoyalCode.RabbitMQ.Components.Connections
 {
@@ -39,7 +37,7 @@ namespace RoyalCode.RabbitMQ.Components.Connections
                 connectionFactories.Each(options.CreationCallback);
 
 
-            return new ClusterConnections(options.ShouldTryBackToFirstConnection,
+            return new ConnectionPool(options.ShouldTryBackToFirstConnection,
                 options.RetryConnectionDelay,
                 connectionFactories);
         }
@@ -83,8 +81,8 @@ namespace RoyalCode.RabbitMQ.Components.Connections
                     if (pos != -1)
                         throw new InvalidOperationException($"Invalid connection string, the name is '{name}'.");
                     
-                    var paramName = part.Substring(0, pos);
-                    var value = part.Substring(pos + 1);
+                    var paramName = part[..pos];
+                    var value = part[(pos + 1)..];
 
                     var cf = new ConnectionFactory();
 

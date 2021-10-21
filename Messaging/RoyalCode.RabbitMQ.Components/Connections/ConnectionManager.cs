@@ -4,7 +4,9 @@ using System.Text;
 
 namespace RoyalCode.RabbitMQ.Components.Connections
 {
-    internal class ConnectionManager
+    public class ConnectionManager
     {
+
+
     }
 }
