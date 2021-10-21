@@ -1,6 +1,6 @@
-﻿using System;
+﻿using RabbitMQ.Client;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace RoyalCode.RabbitMQ.Components.Connections
 {
@@ -17,6 +17,11 @@ namespace RoyalCode.RabbitMQ.Components.Connections
         /// Waiting time to try to connect again.
         /// </summary>
         public TimeSpan RetryConnectionDelay { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// The callback for extra configuration for <see cref="ConnectionFactory"/>.
+        /// </summary>
+        public Action<ConnectionFactory>? CreationCallback { get; set; }
 
         /// <summary>
         /// <para>
@@ -41,5 +46,11 @@ namespace RoyalCode.RabbitMQ.Components.Connections
             csNames.Add(name);
             return this;
         }
+
+        /// <summary>
+        /// Check if an connection was added.
+        /// </summary>
+        /// <returns>True if one or more connections was added.</returns>
+        public bool HasConnections() => csNames.Count > 0;
     }
 }
