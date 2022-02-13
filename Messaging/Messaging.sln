@@ -9,7 +9,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Messaging", "Messaging", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RabbitMQ", "RabbitMQ", "{BD27BD72-2D47-4753-8293-4F18FB760D5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalCode.RabbitMQ.Components", "RoyalCode.RabbitMQ.Components\RoyalCode.RabbitMQ.Components.csproj", "{56D4A043-B8D3-469E-AC00-A74355494709}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.RabbitMQ.Components", "RoyalCode.RabbitMQ.Components\RoyalCode.RabbitMQ.Components.csproj", "{56D4A043-B8D3-469E-AC00-A74355494709}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".items", ".items", "{3D8E805F-02C9-4A33-9548-228B3409E3F6}"
+	ProjectSection(SolutionItems) = preProject
+		base.targets = base.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
