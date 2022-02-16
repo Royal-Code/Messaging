@@ -1,5 +1,5 @@
-﻿using RabbitMQ.Client;
-using System;
+﻿using System;
+using RabbitMQ.Client;
 
 namespace RoyalCode.RabbitMQ.Components.Connections;
 

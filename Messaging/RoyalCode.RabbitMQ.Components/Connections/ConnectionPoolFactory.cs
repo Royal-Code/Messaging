@@ -43,7 +43,7 @@ public class ConnectionPoolFactory
     /// <summary>
     /// Creates a new connection pool for a given name.
     /// </summary>
-    /// <param name="name">The name of connection.</param>
+    /// <param name="name">The name of RabbitMQ Cluster.</param>
     /// <returns>A new instance of connection pool.</returns>
     /// <exception cref="InvalidOperationException">
     ///     If none connection was configurated for the given name.
@@ -53,7 +53,7 @@ public class ConnectionPoolFactory
         var options = this.options.Get(name);
 
         if (!options.HasConnections())
-            throw new InvalidOperationException($"None connection configurated for name '{name}'");
+            throw new InvalidOperationException($"None connection configurated for RabbitMQ Cluster name '{name}'");
 
         var connectionStrings = GetConnectionStrings(options.csNames);
 

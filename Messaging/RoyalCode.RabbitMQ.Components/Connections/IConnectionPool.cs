@@ -13,7 +13,7 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 public interface IConnectionPool
 {
     /// <summary>
-    /// Get the next connection with a RabbitMQ node.
+    /// Get the next connection from a RabbitMQ node.
     /// </summary>
     /// <returns>Main interface for a AMQP connection, with RabbitMQ.</returns>
     IConnection GetNextConnetion();
