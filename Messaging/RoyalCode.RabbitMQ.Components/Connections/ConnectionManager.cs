@@ -1,6 +1,8 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 
@@ -19,15 +21,18 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 public class ConnectionManager
 {
     private readonly ConnectionPoolFactory connectionPoolFactory;
+    private readonly ILoggerFactory loggerFactory;
     private readonly Dictionary<string, ManagedConnection> pools = new();
 
     /// <summary>
     /// Creates a new Connection Manager.
     /// </summary>
     /// <param name="connectionPoolFactory">The factory to create the connections pools.</param>
-    public ConnectionManager(ConnectionPoolFactory connectionPoolFactory)
+    /// <param name="loggerFactory">The logger factory.</param>
+    public ConnectionManager(ConnectionPoolFactory connectionPoolFactory, ILoggerFactory loggerFactory)
     {
         this.connectionPoolFactory = connectionPoolFactory;
+        this.loggerFactory = loggerFactory;
     }
 
     /// <summary>
@@ -55,7 +60,8 @@ public class ConnectionManager
             else
             { 
                 var pool = connectionPoolFactory.Create(name);
-                managed = new ManagedConnection(pool);
+                var logger = loggerFactory.CreateLogger($"{nameof(ManagedConnection)}_{name}");
+                managed = new ManagedConnection(name, pool, logger);
                 pools[name] = managed;
             }
         }
@@ -65,13 +71,22 @@ public class ConnectionManager
 
     private class ManagedConnection
     {
+        private readonly string name;
         private readonly IConnectionPool connectionPool;
-        private IConnection? currentConnection;
+        private readonly ILogger logger;
         private readonly LinkedList<IConnectionConsumer> consumers = new();
+        private readonly EventHandler<ShutdownEventArgs> shutdownEventHandler;
 
-        public ManagedConnection(IConnectionPool connectionPool)
+        private IConnection? currentConnection;
+        private bool error = false;
+
+        public ManagedConnection(string name, IConnectionPool connectionPool, ILogger logger)
         {
+            this.name = name;
             this.connectionPool = connectionPool;
+            this.logger = logger;
+
+            shutdownEventHandler = OnConnectionClosed;
         }
 
         public void AddConsumer(IConnectionConsumer consumer)
@@ -88,15 +103,28 @@ public class ConnectionManager
         {
             if (currentConnection is not null)
             {
+                logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {0}", name);
+
                 consumer.Consume(currentConnection);
                 return;
             }
 
+            if (TryCreateConnection(out var connection))
+            {
+                logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {0}", name);
 
+                consumer.Consume(connection!);
+            }
         }
 
-        public bool TryCreateConnection(out IConnection connection)
+        public bool TryCreateConnection(out IConnection? connection)
         {
+            if (error)
+            {
+                connection = null;
+                return false;
+            }
+
             lock(connectionPool)
             {
                 if (currentConnection is not null)
@@ -105,17 +133,62 @@ public class ConnectionManager
                     return true;
                 }
 
+                logger.LogInformation("Creating a RabbitMQ connection for cluster name {0}", name);
+
                 try
                 {
                     currentConnection = connectionPool.GetNextConnetion();
+                    Connected();
+                    connection = currentConnection;
 
+                    logger.LogInformation("Connection to RabbitMQ realized for cluster name {0}", name);
+
+                    return true;
                 }
                 catch(Exception e)
                 {
-
+                    logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {0}", name);
+                    error = true;
+                    Reconnect();
+                    connection = null;
+                    return false;
                 }
             }
         }
+
+        private void Connected()
+        {
+            if (currentConnection is null)
+                throw new InvalidOperationException();
+
+            currentConnection.ConnectionShutdown += shutdownEventHandler;
+        }
+
+        private void Reconnect()
+        {
+            connectionPool.TryReconnect(Reconnected);
+        }
+
+        private void Reconnected(IConnection connection)
+        {
+            currentConnection = connection;
+            Connected();
+
+
+        }
+
+        private void OnConnectionClosed(object sender, ShutdownEventArgs e)
+        {
+            logger.LogError( 
+                "An error occurred on a RabbitMQ connection for cluster name {0}, a reconnection attempt will be made shortly, origin: {1}, cause: {2}", 
+                name, e.Initiator, e.Cause);
+
+            error = true;
+            currentConnection = null;
+            Reconnect();
+        }
+
+
     }
 }
 
