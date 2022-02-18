@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 
@@ -60,7 +59,7 @@ public class ConnectionManager
             else
             { 
                 var pool = connectionPoolFactory.Create(name);
-                var logger = loggerFactory.CreateLogger($"{nameof(ManagedConnection)}_{name}");
+                var logger = loggerFactory.CreateLogger($"{GetType().FullName}.{nameof(ManagedConnection)}.{name}");
                 managed = new ManagedConnection(name, pool, logger);
                 pools[name] = managed;
             }
@@ -74,7 +73,7 @@ public class ConnectionManager
         private readonly string name;
         private readonly IConnectionPool connectionPool;
         private readonly ILogger logger;
-        private readonly LinkedList<IConnectionConsumer> consumers = new();
+        private readonly LinkedList<ManagedConsumer> consumers = new();
         private readonly EventHandler<ShutdownEventArgs> shutdownEventHandler;
 
         private IConnection? currentConnection;
@@ -91,21 +90,22 @@ public class ConnectionManager
 
         public void AddConsumer(IConnectionConsumer consumer)
         {
+            var managed = new ManagedConsumer(consumer);
             lock (consumers)
             {
-                consumers.AddLast(consumer);
+                consumers.AddLast(managed);
             }
 
-            ConsumeConnection(consumer);
+            ConsumeConnection(managed);
         }
 
-        private void ConsumeConnection(IConnectionConsumer consumer)
+        private void ConsumeConnection(ManagedConsumer consumer)
         {
             if (currentConnection is not null)
             {
                 logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {0}", name);
 
-                consumer.Consume(currentConnection);
+                consumer.Consume(currentConnection, false);
                 return;
             }
 
@@ -113,7 +113,7 @@ public class ConnectionManager
             {
                 logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {0}", name);
 
-                consumer.Consume(connection!);
+                consumer.Consume(connection!, false);
             }
         }
 
@@ -169,12 +169,16 @@ public class ConnectionManager
             connectionPool.TryReconnect(Reconnected);
         }
 
-        private void Reconnected(IConnection connection)
+        private void Reconnected(IConnection connection, bool autorecovered)
         {
             currentConnection = connection;
+            error = false;
             Connected();
 
-
+            foreach (var consumer in consumers)
+            {
+                consumer.Consume(connection, autorecovered);
+            }
         }
 
         private void OnConnectionClosed(object sender, ShutdownEventArgs e)
@@ -184,11 +188,39 @@ public class ConnectionManager
                 name, e.Initiator, e.Cause);
 
             error = true;
-            currentConnection = null;
+
+            if (currentConnection is not null)
+            {
+                currentConnection.ConnectionShutdown -= shutdownEventHandler;
+                currentConnection = null;
+            }
+            
             Reconnect();
         }
+    }
 
+    private class ManagedConsumer
+    {
+        private readonly IConnectionConsumer consumer;
+        private bool first = true;  
 
+        public ManagedConsumer(IConnectionConsumer consumer)
+        {
+            this.consumer = consumer;
+        }
+
+        public void Consume(IConnection connection, bool autorecovered)
+        {
+            if (first)
+            {
+                consumer.Consume(connection);
+                first = false;
+            }
+            else
+            {
+                consumer.Reload(connection, autorecovered);
+            }
+        }
     }
 }
 

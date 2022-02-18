@@ -29,6 +29,6 @@ public interface IConnectionPool
     ///     the callback action is executed again when the connection to the primary node is established
     /// </para>
     /// </summary>
-    /// <param name="callback">the callback action to receive the next connection.</param>
-    void TryReconnect(Action<IConnection> callback);
+    /// <param name="callback">The callback action to receive the next connection and a bool that indicate if the connection was autorecovered.</param>
+    void TryReconnect(Action<IConnection, bool> callback);
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System;
@@ -19,6 +20,7 @@ public class ConnectionPoolFactory
 {
     private readonly IOptionsMonitor<ConnectionPoolOptions> options;
     private readonly IConfiguration configuration;
+    private readonly ILoggerFactory loggerFactory;
     private readonly IConnectionDecrypter? decrypter;
 
     /// <summary>
@@ -26,6 +28,7 @@ public class ConnectionPoolFactory
     /// </summary>
     /// <param name="options">The options to build the pools.</param>
     /// <param name="configuration">The application configurations.</param>
+    /// <param name="loggerFactory">Logger factory.</param>
     /// <param name="decrypter">Optional connection decrypter.</param>
     /// <exception cref="ArgumentNullException">
     ///     If one argument is null.
@@ -33,10 +36,12 @@ public class ConnectionPoolFactory
     public ConnectionPoolFactory(
         IOptionsMonitor<ConnectionPoolOptions> options,
         IConfiguration configuration,
+        ILoggerFactory loggerFactory,
         IConnectionDecrypter? decrypter = null)
     {
         this.options = options ?? throw new ArgumentNullException(nameof(options));
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        this.loggerFactory = loggerFactory;
         this.decrypter = decrypter;
     }
 
@@ -65,7 +70,8 @@ public class ConnectionPoolFactory
 
         return new ConnectionPool(options.ShouldTryBackToFirstConnection,
             options.RetryConnectionDelay,
-            connectionFactories);
+            connectionFactories,
+            loggerFactory.CreateLogger<ConnectionPool>());
     }
 
     private string[] GetConnectionStrings(List<string> csNames)
