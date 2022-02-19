@@ -14,3 +14,21 @@ public interface IChannelProviderFactory
 
     IPooledChannelProvider GetPooled(string name); // requer o tipo?
 }
+
+public interface IChannelManager
+{
+
+    void ConsumeSingletonChannel(string name, IChannelConsumer consumer);
+
+
+}
+
+public interface IChannelConsumer
+{
+
+    void Consume(IChannelProvider provider);
+
+    void ConnectionClosed();
+
+    void ConnectionRecovered(bool autorecovered);
+}

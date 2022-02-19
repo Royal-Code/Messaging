@@ -53,11 +53,11 @@ public class ConnectionManager
         lock (pools)
         {
             if (pools.ContainsKey(name))
-            { 
+            {
                 managed = pools[name];
             }
             else
-            { 
+            {
                 var pool = connectionPoolFactory.Create(name);
                 var logger = loggerFactory.CreateLogger($"{GetType().FullName}.{nameof(ManagedConnection)}.{name}");
                 managed = new ManagedConnection(name, pool, logger);
@@ -90,7 +90,7 @@ public class ConnectionManager
 
         public void AddConsumer(IConnectionConsumer consumer)
         {
-            var managed = new ManagedConsumer(consumer);
+            var managed = new ManagedConsumer(this, consumer);
             lock (consumers)
             {
                 consumers.AddLast(managed);
@@ -125,7 +125,7 @@ public class ConnectionManager
                 return false;
             }
 
-            lock(connectionPool)
+            lock (connectionPool)
             {
                 if (currentConnection is not null)
                 {
@@ -145,7 +145,7 @@ public class ConnectionManager
 
                     return true;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {0}", name);
                     error = true;
@@ -183,8 +183,8 @@ public class ConnectionManager
 
         private void OnConnectionClosed(object sender, ShutdownEventArgs e)
         {
-            logger.LogError( 
-                "An error occurred on a RabbitMQ connection for cluster name {0}, a reconnection attempt will be made shortly, origin: {1}, cause: {2}", 
+            logger.LogError(
+                "An error occurred on a RabbitMQ connection for cluster name {0}, a reconnection attempt will be made shortly, origin: {1}, cause: {2}",
                 name, e.Initiator, e.Cause);
 
             error = true;
@@ -194,18 +194,29 @@ public class ConnectionManager
                 currentConnection.ConnectionShutdown -= shutdownEventHandler;
                 currentConnection = null;
             }
-            
+
             Reconnect();
+        }
+
+        internal void ReleaseConsumer(ManagedConsumer consumer)
+        {
+            lock (consumers)
+            {
+                consumers.Remove(consumer);
+            }
         }
     }
 
     private class ManagedConsumer
     {
+        private readonly ManagedConnection managed;
         private readonly IConnectionConsumer consumer;
-        private bool first = true;  
+        private ConnectionProvider? connectionProvider;
+        private bool first = true;
 
-        public ManagedConsumer(IConnectionConsumer consumer)
+        public ManagedConsumer(ManagedConnection managed, IConnectionConsumer consumer)
         {
+            this.managed = managed;
             this.consumer = consumer;
         }
 
@@ -213,14 +224,40 @@ public class ConnectionManager
         {
             if (first)
             {
-                consumer.Consume(connection);
+                connectionProvider = new ConnectionProvider(connection, ReleaseConsumer);
+
+                consumer.Consume(connectionProvider);
                 first = false;
             }
             else
             {
-                consumer.Reload(connection, autorecovered);
+                connectionProvider!.Connection = connection;
+
+                consumer.Reload(autorecovered);
             }
         }
+
+        private void ReleaseConsumer()
+        {
+            managed.ReleaseConsumer(this);
+        }
+    }
+
+    private sealed class ConnectionProvider : IConnectionProvider
+    {
+        private readonly Action disposeCallback;
+
+        public ConnectionProvider(IConnection connection, Action disposeCallback)
+        {
+            Connection = connection;
+            this.disposeCallback = disposeCallback;
+        }
+
+        public IConnection Connection { get; internal set; }
+
+        public bool IsOpen => Connection.IsOpen;
+
+        public void Dispose() => disposeCallback();
     }
 }
 

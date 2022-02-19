@@ -1,5 +1,4 @@
 ﻿using System;
-using RabbitMQ.Client;
 
 namespace RoyalCode.RabbitMQ.Components.Connections;
 
@@ -30,7 +29,7 @@ public interface IConnectionConsumer : IDisposable
     /// </para>
     /// </summary>
     /// <param name="connection">An open connection with RabbitMQ.</param>
-    void Consume(IConnection connection);
+    void Consume(IConnectionProvider connection);
 
     /// <summary>
     /// <para>
@@ -41,9 +40,8 @@ public interface IConnectionConsumer : IDisposable
     ///     When the new connection is received by consumers, the channels and message receivers must be recreated.
     /// </para>
     /// </summary>
-    /// <param name="connection">The new connection, or the same if auto recovered.</param>
     /// <param name="autorecovered">If the connection was auto recovered</param>
-    void Reload(IConnection connection, bool autorecovered);
+    void Reload(bool autorecovered);
 
     /// <summary>
     /// Informe all consumers that the connection was closed.
