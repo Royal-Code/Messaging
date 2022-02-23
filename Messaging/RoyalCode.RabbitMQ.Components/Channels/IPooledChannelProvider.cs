@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.Extensions.ObjectPool;
+using RabbitMQ.Client;
+using System.Threading.Tasks;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -19,4 +21,39 @@ public interface IPooledChannelProvider
     /// </summary>
     /// <returns></returns>
     Task<IPooledModel> GetAsync();
+}
+
+public class PooledChannelProvider : IPooledChannelProvider
+{
+    private readonly ObjectPool<IModel> modelPool;
+
+    public PooledChannelProvider()
+    {
+        var p = new DefaultObjectPoolProvider();
+        modelPool = p.Create(new ModelPooledObjectPolicy());
+    }
+
+    public Task<IPooledModel> GetAsync()
+    {
+        
+
+        modelPool.Get();
+
+        throw new System.NotImplementedException();
+    }
+}
+
+public class ModelPooledObjectPolicy : IPooledObjectPolicy<IModel>
+{
+
+
+    public IModel Create()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public bool Return(IModel obj)
+    {
+        throw new System.NotImplementedException();
+    }
 }

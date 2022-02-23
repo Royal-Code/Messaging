@@ -38,16 +38,21 @@ public class ConnectionManager
     /// <para>
     ///     Consumes connections from a RabbitMQ Cluster for a given name.
     /// </para>
+    /// <para>
+    ///     If there is not already an open connection, it will be opened.
+    ///     When the connection exists, the consumer will be invoked immediately.
+    ///     If it is not possible to connect at the moment, 
+    ///     a connection will be attempted later and when the connection is successful, 
+    ///     the consumer will be invoked.
+    /// </para>
     /// </summary>
     /// <param name="name">The name of the RabbitMQ Cluster.</param>
     /// <param name="consumer">The connection consumer.</param>
-    public void Consume(string name, IConnectionConsumer consumer)
+    /// <returns>True if was connected, false if has a connection error.</returns>
+    public bool Consume(string name, IConnectionConsumer consumer)
     {
         if (pools.ContainsKey(name))
-        {
-            pools[name].AddConsumer(consumer);
-            return;
-        }
+            return pools[name].AddConsumer(consumer);
 
         ManagedConnection managed;
         lock (pools)
@@ -65,7 +70,7 @@ public class ConnectionManager
             }
         }
 
-        managed.AddConsumer(consumer);
+        return managed.AddConsumer(consumer);
     }
 
     private class ManagedConnection
@@ -88,7 +93,7 @@ public class ConnectionManager
             shutdownEventHandler = OnConnectionClosed;
         }
 
-        public void AddConsumer(IConnectionConsumer consumer)
+        public bool AddConsumer(IConnectionConsumer consumer)
         {
             var managed = new ManagedConsumer(this, consumer);
             lock (consumers)
@@ -96,17 +101,17 @@ public class ConnectionManager
                 consumers.AddLast(managed);
             }
 
-            ConsumeConnection(managed);
+            return ConsumeConnection(managed);
         }
 
-        private void ConsumeConnection(ManagedConsumer consumer)
+        private bool ConsumeConnection(ManagedConsumer consumer)
         {
             if (currentConnection is not null)
             {
                 logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {0}", name);
 
                 consumer.Consume(currentConnection, false);
-                return;
+                return true;
             }
 
             if (TryCreateConnection(out var connection))
@@ -114,7 +119,11 @@ public class ConnectionManager
                 logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {0}", name);
 
                 consumer.Consume(connection!, false);
+
+                return true;
             }
+
+            return false;
         }
 
         public bool TryCreateConnection(out IConnection? connection)
