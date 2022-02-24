@@ -22,38 +22,3 @@ public interface IPooledChannelProvider
     /// <returns></returns>
     Task<IPooledModel> GetAsync();
 }
-
-public class PooledChannelProvider : IPooledChannelProvider
-{
-    private readonly ObjectPool<IModel> modelPool;
-
-    public PooledChannelProvider()
-    {
-        var p = new DefaultObjectPoolProvider();
-        modelPool = p.Create(new ModelPooledObjectPolicy());
-    }
-
-    public Task<IPooledModel> GetAsync()
-    {
-        
-
-        modelPool.Get();
-
-        throw new System.NotImplementedException();
-    }
-}
-
-public class ModelPooledObjectPolicy : IPooledObjectPolicy<IModel>
-{
-
-
-    public IModel Create()
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public bool Return(IModel obj)
-    {
-        throw new System.NotImplementedException();
-    }
-}

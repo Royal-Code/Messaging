@@ -15,5 +15,10 @@ public enum ChannelStrategy
     /// <summary>
     /// A common and shared channel between all the consumers.
     /// </summary>
-    Singleton
+    Singleton,
+    
+    /// <summary>
+    /// A channel from a pool.
+    /// </summary>
+    Pooled,
 }

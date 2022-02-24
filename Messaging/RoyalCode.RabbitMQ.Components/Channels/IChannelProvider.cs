@@ -1,5 +1,7 @@
 ﻿using RabbitMQ.Client;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -14,22 +16,5 @@ public interface IChannelProvider
     /// <summary>
     /// Get the RabbitMQ channel, an object of type: <see cref="IModel"/>.
     /// </summary>
-    IModel Channel { get; }
-
-    /// <summary>
-    /// <para>
-    ///     Event raised when the channel was recreated.
-    /// </para>
-    /// <para>
-    ///     This will occurs after the RabbitMQ connection are restablisher.
-    /// </para>
-    /// </summary>
-    event EventHandler<IModel> ChannelRecreated;
-
-    /// <summary>
-    /// <para>
-    ///     Event raised when the component are dispose.
-    /// </para>
-    /// </summary>
-    event EventHandler ChannelDisposing;
+    Task<IModel> GetChannelAsync(CancellationToken cancellationToken);
 }
