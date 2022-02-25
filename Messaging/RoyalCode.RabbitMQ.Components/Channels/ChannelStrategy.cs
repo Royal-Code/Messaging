@@ -15,7 +15,7 @@ public enum ChannelStrategy
     /// <summary>
     /// A common and shared channel between all the consumers.
     /// </summary>
-    Singleton,
+    Shared,
     
     /// <summary>
     /// A channel from a pool.

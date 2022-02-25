@@ -2,5 +2,5 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 
 public interface IChannelManager
 {
-    void Consume(string name, ChannelStrategy strategy, IChannelConsumer consumer);
+    void Consume(string name, IChannelConsumer consumer);
 }
