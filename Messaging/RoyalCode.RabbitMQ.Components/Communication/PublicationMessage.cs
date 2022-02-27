@@ -30,4 +30,9 @@ public class PublicationMessage
     /// The message content.
     /// </summary>
     public ReadOnlyMemory<byte> Body { get; }
+
+    /// <summary>
+    /// Optional rounting key for publication.
+    /// </summary>
+    public string? RoutingKey { get; set; }
 }

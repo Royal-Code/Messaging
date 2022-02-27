@@ -64,7 +64,7 @@ public class Publisher : BaseComponent
         var properties = model.CreateBasicProperties();
         message.ConfigureProperties?.Invoke(properties);
 
-        var address = channelInfo.GetPublicationAddress(model);
+        var address = channelInfo.GetPublicationAddress(model, message.RoutingKey);
 
         logger.LogDebug("publishing message to: {0}", address);
 
