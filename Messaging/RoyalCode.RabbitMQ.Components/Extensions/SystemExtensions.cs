@@ -1,4 +1,6 @@
 ﻿
+using System.Runtime.CompilerServices;
+
 namespace System;
 
 internal static class SystemExtensions
@@ -9,6 +11,7 @@ internal static class SystemExtensions
     /// <typeparam name="T">The array values type.</typeparam>
     /// <param name="array">The array.</param>
     /// <param name="action">The action.</param>
+    [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
     public static void Each<T>(this T[] array, Action<T> action)
     {
         for (int i = 0; i < array.Length; i++)
