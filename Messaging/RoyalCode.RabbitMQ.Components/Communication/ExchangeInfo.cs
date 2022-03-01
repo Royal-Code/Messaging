@@ -127,4 +127,10 @@ public class ExchangeInfo
         publicationAddresses[routingKey] = publicationAddress;
         return publicationAddress;
     }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return $"{Type.ToExchageType()}://{Name}";
+    }
 }

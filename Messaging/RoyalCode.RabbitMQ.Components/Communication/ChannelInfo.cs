@@ -176,4 +176,15 @@ public class ChannelInfo
         Queue?.ResetDeclarations();
         Exchange?.ResetDeclarations();
     }
+
+    /// <summary>
+    /// Generates a string with the channel properties.
+    /// </summary>
+    /// <returns><see cref="string"/>.</returns>
+    public override string ToString()
+    {
+        return Type is ChannelType.Exchange
+            ? Exchange!.ToString()
+            : Queue!.ToString();
+    }
 }

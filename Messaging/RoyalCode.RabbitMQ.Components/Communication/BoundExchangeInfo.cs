@@ -41,4 +41,12 @@ public class BoundExchangeInfo
     internal string[] GetRouteKeys() => RoutingKeys.Length > 0
         ? RoutingKeys
         : new string[] { string.Empty };
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return RoutingKeys.Length > 0
+            ? $"{BoundExchange.Name}={string.Join("|", RoutingKeys)}"
+            : BoundExchange.Name;
+    }
 }

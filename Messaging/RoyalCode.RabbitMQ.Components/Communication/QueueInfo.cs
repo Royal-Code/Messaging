@@ -170,4 +170,17 @@ public class QueueInfo
         queueDeclareOk = null;
         publicationAddress = null;
     }
+
+    /// <summary>
+    /// Informações sobre a queue.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        var bindings = BindInfo.ToString();
+
+        return bindings.Length > 0
+            ? $"Queue://{Name}?{bindings}"
+            : $"Queue://{Name}";
+    }
 }

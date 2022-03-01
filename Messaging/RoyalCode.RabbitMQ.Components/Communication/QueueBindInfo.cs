@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
@@ -18,4 +19,12 @@ public class QueueBindInfo
     /// </para>
     /// </summary>
     public ICollection<BoundExchangeInfo> BoundExchangeInfos { get; } = new LinkedList<BoundExchangeInfo>();
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return BoundExchangeInfos.Count is 0
+            ? string.Empty
+            : string.Join("&", BoundExchangeInfos.Select(i => i.ToString()));
+    }
 }
