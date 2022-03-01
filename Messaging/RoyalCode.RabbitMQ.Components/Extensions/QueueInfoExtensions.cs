@@ -99,4 +99,49 @@ public static class QueueInfoExtensions
         queue.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(exchange, routeKeys));
         return queue;
     }
+
+    /// <summary>
+    /// <para>
+    ///     Bind the queue to an exchange of type fanout.
+    /// </para>
+    /// </summary>
+    /// <param name="queue">Queue information.</param>
+    /// <param name="exchangeName">Nam of the exchange to bind.</param>
+    /// <param name="routeKeys">Routing keys.</param>
+    /// <returns>The same instance for chained calls.</returns>
+    public static QueueInfo BindToFanout(this QueueInfo queue, string exchangeName, params string[] routeKeys)
+    {
+        queue.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Fanout(exchangeName), routeKeys));
+        return queue;
+    }
+
+    /// <summary>
+    /// <para>
+    ///     Bind the queue to an exchange of type route.
+    /// </para>
+    /// </summary>
+    /// <param name="queue">Queue information.</param>
+    /// <param name="exchangeName">Nam of the exchange to bind.</param>
+    /// <param name="routeKeys">Routing keys.</param>
+    /// <returns>The same instance for chained calls.</returns>
+    public static QueueInfo BindToRoute(this QueueInfo queue, string exchangeName, params string[] routeKeys)
+    {
+        queue.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Route(exchangeName), routeKeys));
+        return queue;
+    }
+
+    /// <summary>
+    /// <para>
+    ///     Bind the queue to an exchange of type topic.
+    /// </para>
+    /// </summary>
+    /// <param name="queue">Queue information.</param>
+    /// <param name="exchangeName">Nam of the exchange to bind.</param>
+    /// <param name="routeKeys">Routing keys.</param>
+    /// <returns>The same instance for chained calls.</returns>
+    public static QueueInfo BindToTopic(this QueueInfo queue, string exchangeName, params string[] routeKeys)
+    {
+        queue.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Topic(exchangeName), routeKeys));
+        return queue;
+    }
 }
