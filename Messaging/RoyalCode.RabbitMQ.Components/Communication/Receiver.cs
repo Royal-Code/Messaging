@@ -1,18 +1,23 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RoyalCode.RabbitMQ.Components.Channels;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
+/// <summary>
+/// Generic component to receive messange from RabbitMQ.
+/// </summary>
 public class Receiver : BaseComponent
 {
     private readonly ChannelInfo channelInfo;
     private readonly ILogger<Publisher> logger;
+    private readonly ICollection<MessageListener> listeners = new LinkedList<MessageListener>();
+    private readonly Dictionary<MessageListener, EventingBasicConsumer> consumersMap = new();
+    private readonly ICollection<MessageListener> waitingListeners = new LinkedList<MessageListener>();
 
     /// <summary>
     /// Creates a new receiver to listen messages from RabbitMQ.
@@ -43,25 +48,81 @@ public class Receiver : BaseComponent
         logger.LogDebug("Receiver created for channel: {0}", channelInfo);
     }
 
-    public async Task Listen(MessageListener messageListener, CancellationToken cancellationToken)
+    /// <summary>
+    /// <para>
+    ///     Listens for messages received from RabbitMQ according to the channel settings.
+    /// </para>
+    /// </summary>
+    /// <param name="messageListener">Listener for received messages.</param>
+    public void Listen(MessageListener messageListener)
     {
-
-
-
+        listeners.Add(messageListener);
+        AddConsumer(messageListener);
     }
 
+    private void AddConsumer(MessageListener messageListener)
+    {
+        lock (consumersMap)
+        {
+            try
+            {
+                HandleEventForConsumer(messageListener);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to consume a RabbitMQ queue, channel: {0}", channelInfo);
+
+                if (!waitingListeners.Contains(messageListener))
+                    waitingListeners.Add(messageListener);
+            }
+        }
+    }
+
+    private void HandleEventForConsumer(MessageListener messageListener)
+    {
+        var model = GetChannelToReceive();
+
+        var consumer = new EventingBasicConsumer(model);
+        consumer.Received += messageListener.Consumer;
+
+        var ok = channelInfo.GetConsumerQueue(model);
+        model.BasicConsume(
+            queue: ok.QueueName,
+            autoAck: false,
+            consumer: consumer);
+
+        consumersMap.Add(messageListener, consumer);
+    }
+
+    /// <inheritdoc/>
     protected override void ChannelProviderIsAvailable()
     {
-        throw new NotImplementedException();
+        lock(consumersMap)
+        {
+            var listeners = waitingListeners.ToArray();
+            foreach (var messageListener in listeners)
+            {
+                HandleEventForConsumer(messageListener);
+                waitingListeners.Remove(messageListener);
+            }
+        }
     }
 
+    /// <inheritdoc/>
     protected override void ConnectionIsRecovered(bool autorecovered)
     {
-        throw new NotImplementedException();
-    }
-}
+        if (autorecovered)
+        {
+            lock (consumersMap)
+            {
+                foreach (var listener in consumersMap.Keys)
+                {
+                    waitingListeners.Add(listener);
+                }
+                consumersMap.Clear();
+            }
 
-public class MessageListener
-{
-    
+            ChannelProviderIsAvailable();
+        }
+    }
 }

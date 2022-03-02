@@ -39,7 +39,7 @@ public class DeadLetterInfo
         if (Active)
         {
             if (string.IsNullOrWhiteSpace(Exchange))
-                throw new ChannelConfiguraException("The Exchange for dead letter is invalid.");
+                throw new ChannelConfigurationException("The Exchange for dead letter is invalid.");
 
             queueArguments["x-dead-letter-exchange"] = Exchange;
 
@@ -48,7 +48,7 @@ public class DeadLetterInfo
                 case DeadLetterRoutingKind.UseQueueName:
 
                     if (string.IsNullOrWhiteSpace(queueName))
-                        throw new ChannelConfiguraException("Invalid queue name for declare as dead letter routing key.");
+                        throw new ChannelConfigurationException("Invalid queue name for declare as dead letter routing key.");
 
                     queueArguments["x-dead-letter-routing-key"] = queueName;
                     break;
@@ -56,7 +56,7 @@ public class DeadLetterInfo
                 case DeadLetterRoutingKind.UseSpecifiedValue:
 
                     if (string.IsNullOrWhiteSpace(RoutingKey))
-                        throw new ChannelConfiguraException("The specified routing key for dead letter is invalid.");
+                        throw new ChannelConfigurationException("The specified routing key for dead letter is invalid.");
 
                     queueArguments["x-dead-letter-routing-key"] = RoutingKey;
                     break;

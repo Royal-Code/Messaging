@@ -3,11 +3,11 @@
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
 /// <inheritdoc/>
-public class ChannelConfiguraException : InvalidOperationException
+public class ChannelConfigurationException : InvalidOperationException
 {
     /// <inheritdoc/>
-    public ChannelConfiguraException(string message) : base(message) { }
+    public ChannelConfigurationException(string message) : base(message) { }
 
     /// <inheritdoc/>
-    public ChannelConfiguraException(string message, Exception innerException) : base(message, innerException) { }
+    public ChannelConfigurationException(string message, Exception innerException) : base(message, innerException) { }
 }
