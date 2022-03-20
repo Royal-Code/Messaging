@@ -48,7 +48,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo UseExclusive(this ChannelInfo channel, bool exclusive)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("The Exclusive property can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("The Exclusive property can only be configurated for queues, and this channel type is exchange.");
 
         channel.Queue!.Exclusive = exclusive;
         return channel;
@@ -63,7 +63,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo UseDeadLetter(this ChannelInfo channel, bool activate = true)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("Deadletter can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("Deadletter can only be configurated for queues, and this channel type is exchange.");
 
         var deadLetter = channel.Queue!.DeadLetter;
         deadLetter.Active = activate;
@@ -83,7 +83,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo BindTo(this ChannelInfo channel, ExchangeInfo exchange, params string[] routeKeys)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("Bind To can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("Bind To can only be configurated for queues, and this channel type is exchange.");
 
         channel.Queue!.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(exchange, routeKeys));
         return channel;
@@ -101,7 +101,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo BindToFanout(this ChannelInfo channel, string exchangeName, params string[] routeKeys)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("Bind To can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("Bind To can only be configurated for queues, and this channel type is exchange.");
 
         channel.Queue!.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Fanout(exchangeName), routeKeys));
         return channel;
@@ -119,7 +119,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo BindToRoute(this ChannelInfo channel, string exchangeName, params string[] routeKeys)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("Bind To can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("Bind To can only be configurated for queues, and this channel type is exchange.");
 
         channel.Queue!.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Route(exchangeName), routeKeys));
         return channel;
@@ -137,7 +137,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo BindToTopic(this ChannelInfo channel, string exchangeName, params string[] routeKeys)
     {
         if (channel.Type is not ChannelType.Queue)
-            throw new ChannelConfiguraException("Bind To can only be configurated for queues, and this channel type is exchange.");
+            throw new ChannelConfigurationException("Bind To can only be configurated for queues, and this channel type is exchange.");
 
         channel.Queue!.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(ExchangeInfo.Topic(exchangeName), routeKeys));
         return channel;
@@ -155,7 +155,7 @@ public static class ChannelInfoExtensions
     public static ChannelInfo AddProperty(this ChannelInfo channel, string name, object value)
     {
         if (channel.Type is not ChannelType.Exchange)
-            throw new ChannelConfiguraException("AddProperty can only be configurated for exchanges, and this channel type is queue.");
+            throw new ChannelConfigurationException("AddProperty can only be configurated for exchanges, and this channel type is queue.");
 
         channel.Exchange!.Properties[name] = value;
         return channel;

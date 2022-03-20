@@ -54,9 +54,9 @@ internal class ConnectionPool : IConnectionPool
 
     public void TryReconnect(Action<IConnection, bool> callback)
     {
-        if (currentConnection is null)
-            throw new InvalidOperationException(
-                "It can try reconnect at the first time, before the GetNextConnection method must be called.");
+        //if (currentConnection is null)
+        //    throw new InvalidOperationException(
+        //        "It can try reconnect at the first time, before the GetNextConnection method must be called.");
 
         var thread = new Thread(Reconnector);
         thread.Start(callback);
@@ -73,7 +73,7 @@ internal class ConnectionPool : IConnectionPool
     {
         Action<IConnection, bool> callback = (Action<IConnection, bool>)callbackObject;
 
-        if (currentConnection!.IsOpen)
+        if (currentConnection?.IsOpen ?? false)
             callback(currentConnection, true);
 
         int attempts = 0;
@@ -81,7 +81,7 @@ internal class ConnectionPool : IConnectionPool
         {
             Thread.Sleep(RetryConnectionDelay);
 
-            if (currentConnection!.IsOpen)
+            if (currentConnection?.IsOpen ?? false)
             {
                 callback(currentConnection, true);
                 break;

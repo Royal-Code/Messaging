@@ -103,6 +103,10 @@ public class ConnectionPoolFactory
         {
             var cs = connectionStrings[i];
 
+            var cf = new ConnectionFactory();
+            cf.AutomaticRecoveryEnabled = true;
+            cf.RequestedConnectionTimeout = TimeSpan.FromSeconds(120);
+
             var parts = cs.Split(';');
             foreach (var part in parts)
             {
@@ -110,19 +114,19 @@ public class ConnectionPoolFactory
                     continue;
 
                 var pos = part.IndexOf('=');
-                if (pos != -1)
+                if (pos is -1)
                     throw new InvalidOperationException($"Invalid connection string, the name is '{name}'.");
 
                 var paramName = part[..pos];
                 var value = part[(pos + 1)..];
 
-                var cf = new ConnectionFactory();
-
-                if (paramName.Equals(Parameters.HostName, StringComparison.OrdinalIgnoreCase))
+                if (paramName.Equals(Parameters.HostName, StringComparison.OrdinalIgnoreCase)
+                    || paramName.Equals(Parameters.Host, StringComparison.OrdinalIgnoreCase))
                     cf.HostName = value;
                 else if (paramName.Equals(Parameters.Port, StringComparison.OrdinalIgnoreCase))
                     cf.Port = int.Parse(value);
-                else if (paramName.Equals(Parameters.UserName, StringComparison.OrdinalIgnoreCase))
+                else if (paramName.Equals(Parameters.UserName, StringComparison.OrdinalIgnoreCase)
+                    || paramName.Equals(Parameters.User, StringComparison.OrdinalIgnoreCase))
                     cf.UserName = value;
                 else if (paramName.Equals(Parameters.Password, StringComparison.OrdinalIgnoreCase))
                     cf.Password = value;
@@ -136,9 +140,9 @@ public class ConnectionPoolFactory
                 else
                     throw new InvalidOperationException(
                         $"Connection string with name is '{name}' has a invalid property name ({paramName}).");
-
-                connections[i] = cf;
             }
+
+            connections[i] = cf;
         }
 
         return connections;
@@ -160,9 +164,19 @@ public class ConnectionPoolFactory
         public const string HostName = "HostName";
 
         /// <summary>
+        /// Host
+        /// </summary>
+        public const string Host = "Host";
+
+        /// <summary>
         /// UserName
         /// </summary>
         public const string UserName = "UserName";
+
+        /// <summary>
+        /// User
+        /// </summary>
+        public const string User = "User";
 
         /// <summary>
         /// Password
