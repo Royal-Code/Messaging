@@ -43,9 +43,9 @@ public class T02_Connections
 
     private class TestConnectionConsumer : IConnectionConsumer
     {
-        public IConnection Connection => ConnectionProvider.Connection;
+        public IConnection? Connection => ConnectionProvider?.Connection;
 
-        public IConnectionProvider ConnectionProvider { get; private set; }
+        public IConnectionProvider? ConnectionProvider { get; private set; }
 
         public void Closed() { }
 

@@ -1,0 +1,19 @@
+version: '3'
+services:
+  rabbitmq:
+    hostname: "rabbit"
+    image: "rabbitmq:3.9-management"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "5552:5552"
+    volumes:
+      - "./mnesia:/var/lib/rabbitmq/mnesia/"
+      - "./log:/var/log/rabbitmq"
+      - "./config:/etc/rabbitmq"
+    networks:
+      - rabbitmq
+
+networks:
+  rabbitmq:
+    driver: bridge
