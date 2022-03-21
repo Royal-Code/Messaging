@@ -27,5 +27,5 @@ public interface IAsyncObjectPool<T>
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>Task that returns the pooled object.</returns>
-    Task<IPooledObject<T>> GetAsync(CancellationToken cancellationToken);
+    Task<IPooledObject<T>> GetAsync(CancellationToken cancellationToken = default);
 }

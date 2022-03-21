@@ -2,6 +2,10 @@ using System;
 
 namespace RoyalCode.RabbitMQ.Components.ObjectPool;
 
+/// <summary>
+/// Default implementation of <see cref="IPooledObject{T}"/>.
+/// </summary>
+/// <typeparam name="T">The object type.</typeparam>
 public sealed class DefaultPooledObject<T> : IPooledObject<T>
     where T : class
 {
@@ -35,6 +39,12 @@ public sealed class DefaultPooledObject<T> : IPooledObject<T>
         }
     }
 
+    /// <summary>
+    /// <para>
+    ///     Internal, used by <see cref="DefaultAsyncObjectPool{T}"/> after initialize the object.
+    /// </para>
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If the object is in use.</exception>
     internal void SetReadyForUse()
     {
         if (readyForUse)
@@ -46,7 +56,7 @@ public sealed class DefaultPooledObject<T> : IPooledObject<T>
     /// <inheritdoc />
     public void Dispose()
     {
-        readyForUse = false;
         pool.Return(this);
+        readyForUse = false;
     }
 }

@@ -15,7 +15,7 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
     where T : class
 {
     private readonly ObjectPoolPolicy<T> policy;
-    private readonly Object locker = new();
+    private readonly object locker = new();
     private readonly Stack<DefaultPooledObject<T>> free = new();
     private readonly LinkedList<DefaultPooledObject<T>> inUse = new();
     private readonly Queue<Tuple<TaskCompletionSource<IPooledObject<T>>, CancellationToken>> scheduled = new();
@@ -30,7 +30,7 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
     }
 
     /// <inheritdoc />
-    public Task<IPooledObject<T>> GetAsync(CancellationToken cancellationToken)
+    public Task<IPooledObject<T>> GetAsync(CancellationToken cancellationToken = default)
     {
         DefaultPooledObject<T>? pooled;
         
@@ -45,10 +45,24 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
             }
 
             Initialize(pooled);
-            inUse.AddLast(pooled);
         }
 
         return Task.FromResult<IPooledObject<T>>(pooled);
+    }
+
+    /// <summary>
+    /// Return the number of objects in use.
+    /// </summary>
+    /// <returns>The count of objects in use.</returns>
+    public int CountObjectsInUse()
+    {
+        int count;
+        lock (locker)
+        {
+            count = inUse.Count;
+        }
+
+        return count;
     }
     
     internal void Return(DefaultPooledObject<T> pooled)
@@ -56,6 +70,9 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
         lock (locker)
         {
             policy.Return(pooled.Instace);
+            inUse.Remove(pooled);
+            
+            var pooledFree = new DefaultPooledObject<T>(this, pooled.Instace);
             
             checkScheduled:
             if (scheduled.TryDequeue(out var scheduledItem))
@@ -71,13 +88,12 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
                     goto checkScheduled;
                 }
 
-                Initialize(pooled);
-                scheduledItem.Item1.TrySetResult(pooled);
+                Initialize(pooledFree);
+                scheduledItem.Item1.TrySetResult(pooledFree);
             }
             else
             {
-                inUse.Remove(pooled);
-                free.Push(pooled);
+                free.Push(pooledFree);
             }
         }
     }
@@ -91,8 +107,9 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
 
     private void Initialize(DefaultPooledObject<T> pooled)
     {
-        policy.Initialize(pooled.Instace);
         pooled.SetReadyForUse();
+        inUse.AddLast(pooled);
+        policy.Initialize(pooled.Instace);
     }
 
     private DefaultPooledObject<T> Create()
