@@ -18,7 +18,7 @@ namespace RoyalCode.RabbitMQ.Components.Communication;
 public abstract class BaseComponent : IChannelConsumer, IDisposable
 {
     private readonly ChannelStrategy channelStrategy;
-    private readonly IChannelConsummation consummation;
+    private readonly IChannelConsumption consumption;
     
     private bool initialized;
     private bool disposedValue;
@@ -38,7 +38,7 @@ public abstract class BaseComponent : IChannelConsumer, IDisposable
         initialized = false;
 
         this.channelStrategy = channelStrategy;
-        consummation = channelManager.Consume(clusterName, this);
+        consumption = channelManager.Consume(clusterName, this);
         
         initialized = true;
     }
@@ -169,7 +169,7 @@ public abstract class BaseComponent : IChannelConsumer, IDisposable
         {
             if (disposing)
             {
-                consummation.Dispose();
+                consumption.Dispose();
                 if (currentModel is not null && channelStrategy == ChannelStrategy.Exclusive)
                     currentModel.Dispose();
             }

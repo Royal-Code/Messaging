@@ -51,10 +51,9 @@ public class ConnectionManager
     /// <returns>True if was connected, false if has a connection error.</returns>
     public bool Consume(string name, IConnectionConsumer consumer)
     {
-        if (pools.ContainsKey(name))
-            return pools[name].AddConsumer(consumer);
-
-        ManagedConnection managed;
+        if (pools.TryGetValue(name, out var managed)) 
+            return managed.AddConsumer(consumer);
+        
         lock (pools)
         {
             if (pools.ContainsKey(name))
@@ -82,7 +81,7 @@ public class ConnectionManager
         private readonly EventHandler<ShutdownEventArgs> shutdownEventHandler;
 
         private IConnection? currentConnection;
-        private bool error = false;
+        private bool error;
 
         public ManagedConnection(string name, IConnectionPool connectionPool, ILogger logger)
         {
@@ -108,15 +107,15 @@ public class ConnectionManager
         {
             if (currentConnection is not null)
             {
-                logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {0}", name);
+                logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {Name}", name);
 
                 consumer.Consume(currentConnection, false);
                 return true;
             }
 
-            if (TryCreateConnection(out var connection))
+            if (TryGetOrCreateConnection(out var connection))
             {
-                logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {0}", name);
+                logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {Name}", name);
 
                 consumer.Consume(connection!, false);
 
@@ -126,7 +125,7 @@ public class ConnectionManager
             return false;
         }
 
-        public bool TryCreateConnection(out IConnection? connection)
+        private bool TryGetOrCreateConnection(out IConnection? connection)
         {
             if (error)
             {
@@ -142,7 +141,7 @@ public class ConnectionManager
                     return true;
                 }
 
-                logger.LogInformation("Creating a RabbitMQ connection for cluster name {0}", name);
+                logger.LogInformation("Creating a RabbitMQ connection for cluster name {Name}", name);
 
                 try
                 {
@@ -150,13 +149,13 @@ public class ConnectionManager
                     Connected();
                     connection = currentConnection;
 
-                    logger.LogInformation("Connection to RabbitMQ realized for cluster name {0}", name);
+                    logger.LogInformation("Connection to RabbitMQ realized for cluster name {Name}", name);
 
                     return true;
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {0}", name);
+                    logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {Name}", name);
                     error = true;
                     Reconnect();
                     connection = null;
@@ -184,16 +183,19 @@ public class ConnectionManager
             error = false;
             Connected();
 
-            foreach (var consumer in consumers)
+            lock (consumers)
             {
-                consumer.Consume(connection, autorecovered);
+                foreach (var consumer in consumers)
+                {
+                    consumer.Consume(connection, autorecovered);
+                }
             }
         }
 
-        private void OnConnectionClosed(object sender, ShutdownEventArgs e)
+        private void OnConnectionClosed(object? sender, ShutdownEventArgs e)
         {
             logger.LogError(
-                "An error occurred on a RabbitMQ connection for cluster name {0}, a reconnection attempt will be made shortly, origin: {1}, cause: {2}",
+                "An error occurred on a RabbitMQ connection for cluster name {Name}, a reconnection attempt will be made shortly, origin: {Initiator}, cause: {Cause}",
                 name, e.Initiator, e.Cause);
 
             error = true;

@@ -13,22 +13,7 @@ public class T02_Connections
     [Fact]
     public void T01_Connect()
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", false, true)
-            .Build();
-
-        var services = new ServiceCollection();
-        services.AddSingleton<IConfiguration>(config);
-        services.AddLogging(builder => builder.AddConsole());
-
-        services.AddRabbitMQComponents();
-        services.ConfigureRabbitMQConnection("test", options =>
-        {
-            options.AddConnectionStringName("test");
-        });
-
-        var sp = services.BuildServiceProvider();
+        var sp = Container.Prepare();
 
         var cm = sp.GetService<ConnectionManager>();
 
@@ -40,6 +25,29 @@ public class T02_Connections
         Assert.NotNull(consumer.ConnectionProvider);
         Assert.NotNull(consumer.Connection);
     }
+    
+    [Fact]
+    public void T02_SameConnect()
+    {
+        var sp = Container.Prepare();
+
+        var cm = sp.GetService<ConnectionManager>();
+
+        Assert.NotNull(cm);
+
+        var consumer = new TestConnectionConsumer();
+        cm!.Consume("test", consumer);
+        var first = consumer.Connection;
+        consumer.Dispose();
+        
+        consumer = new TestConnectionConsumer();
+        cm!.Consume("test", consumer);
+        var second = consumer.Connection;
+        consumer.Dispose();
+        
+        Assert.True(first.IsOpen);
+        Assert.Same(first, second);
+    }
 
     private class TestConnectionConsumer : IConnectionConsumer
     {
@@ -49,12 +57,16 @@ public class T02_Connections
 
         public void Closed() { }
 
-        public void Consume(IConnectionProvider connection)
+        public void Consume(IConnectionProvider connectionProvider)
         {
-            ConnectionProvider = connection;
+            ConnectionProvider = connectionProvider;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            ConnectionProvider?.Dispose();
+            ConnectionProvider = null;
+        }
 
         public void Reload(bool autorecovered) { }
     }

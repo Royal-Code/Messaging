@@ -20,6 +20,6 @@ public interface IChannelManager
     /// </summary>
     /// <param name="name">The RabbitMQ cluster name.</param>
     /// <param name="consumer">The channel consumer.</param>
-    /// <returns>A <ver cref="IDisposable"/> object to finalize the consummation.</returns>
-    IChannelConsummation Consume(string name, IChannelConsumer consumer);
+    /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
+    IChannelConsumption Consume(string name, IChannelConsumer consumer);
 }

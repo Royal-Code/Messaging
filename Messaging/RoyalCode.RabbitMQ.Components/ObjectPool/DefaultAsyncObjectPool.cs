@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,6 +64,21 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
         }
 
         return count;
+    }
+
+    /// <inheritdoc />
+    public void Return(T instance)
+    {
+        DefaultPooledObject<T>? pooled;
+        lock (locker)
+        {
+             pooled = inUse.FirstOrDefault(p => p.Instace == instance);
+        }
+
+        if (pooled is null)
+            throw new InvalidOperationException("The instance is not pooled and can not be returned");
+            
+        Return(pooled);
     }
     
     internal void Return(DefaultPooledObject<T> pooled)

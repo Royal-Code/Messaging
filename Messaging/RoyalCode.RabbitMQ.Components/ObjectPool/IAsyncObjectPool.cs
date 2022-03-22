@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,4 +29,13 @@ public interface IAsyncObjectPool<T>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>Task that returns the pooled object.</returns>
     Task<IPooledObject<T>> GetAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// <para>
+    ///     Return a pooled instance.
+    /// </para>
+    /// </summary>
+    /// <param name="instace">The pooled instance.</param>
+    /// <exception cref="InvalidOperationException">If the instance is not pooled.</exception>
+    void Return(T instace);
 }
