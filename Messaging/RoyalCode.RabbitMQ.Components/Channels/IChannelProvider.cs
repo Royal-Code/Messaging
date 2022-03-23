@@ -22,7 +22,7 @@ public interface IChannelProvider
     /// </para>
     /// </summary>
     /// <returns>Task for async processing with the <see cref="IModel"/>.</returns>
-    Task<IModel> GetPooledChannelAsync(CancellationToken cancellationToken);
+    Task<IModel> GetPooledChannelAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// <para>

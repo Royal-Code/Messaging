@@ -1,9 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
-using System;
 using Xunit;
 
 namespace RoyalCode.RabbitMQ.Components.Tests;
@@ -41,11 +38,11 @@ public class T02_Connections
         consumer.Dispose();
         
         consumer = new TestConnectionConsumer();
-        cm!.Consume("test", consumer);
+        cm.Consume("test", consumer);
         var second = consumer.Connection;
         consumer.Dispose();
         
-        Assert.True(first.IsOpen);
+        Assert.True(first!.IsOpen);
         Assert.Same(first, second);
     }
 

@@ -39,7 +39,7 @@ internal sealed class DefaultChannelProvider : IChannelProvider, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<IModel> GetPooledChannelAsync(CancellationToken cancellationToken)
+    public async Task<IModel> GetPooledChannelAsync(CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Getting a pooled channel");
         
@@ -90,7 +90,7 @@ internal sealed class DefaultChannelProvider : IChannelProvider, IDisposable
     {
         lock (pool)
         {
-            return sharedModel ??= SafeCreateModel();
+            return sharedModel ??= CreateChannel();
         }
     }
 

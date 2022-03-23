@@ -27,10 +27,11 @@ public class ChannelManager : IChannelManager
         OptionsMonitor = optionsMonitor;
     }
     
-    internal ILoggerFactory LoggerFactory { get; }
+    private ILoggerFactory LoggerFactory { get; }
     
-    internal IOptionsMonitor<ChannelPoolOptions> OptionsMonitor { get; }
+    private IOptionsMonitor<ChannelPoolOptions> OptionsMonitor { get; }
     
+    /// <inheritdoc />
     public IChannelConsumption Consume(string name, IChannelConsumer consumer)
     {
         if (connectionConsumers.TryGetValue(name, out var connectionConsumer))
