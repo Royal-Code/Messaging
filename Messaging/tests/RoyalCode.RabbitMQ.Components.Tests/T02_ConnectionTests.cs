@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
 using Xunit;
 
 namespace RoyalCode.RabbitMQ.Components.Tests;
 
-public class T02_Connections
+public class T02_ConnectionTests
 {
     [Fact]
     public void T01_Connect()
@@ -44,27 +43,5 @@ public class T02_Connections
         
         Assert.True(first!.IsOpen);
         Assert.Same(first, second);
-    }
-
-    private class TestConnectionConsumer : IConnectionConsumer
-    {
-        public IConnection? Connection => ConnectionProvider?.Connection;
-
-        public IConnectionProvider? ConnectionProvider { get; private set; }
-
-        public void Closed() { }
-
-        public void Consume(IConnectionProvider connectionProvider)
-        {
-            ConnectionProvider = connectionProvider;
-        }
-
-        public void Dispose()
-        {
-            ConnectionProvider?.Dispose();
-            ConnectionProvider = null;
-        }
-
-        public void Reload(bool autorecovered) { }
     }
 }

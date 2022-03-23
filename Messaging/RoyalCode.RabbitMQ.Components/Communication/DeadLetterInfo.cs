@@ -34,7 +34,7 @@ public class DeadLetterInfo
     /// </summary>
     /// <param name="queueArguments">Arguments for queue.</param>
     /// <param name="queueName">Queue Name, to be used if the type of route key is the queue name.</param>
-    public void Include(Dictionary<string, object> queueArguments, string? queueName)
+    private void Include(Dictionary<string, object> queueArguments, string? queueName)
     {
         if (Active)
         {
@@ -78,20 +78,6 @@ public class DeadLetterInfo
         var arguments = new Dictionary<string, object>();
         Include(arguments, queueName);
         return arguments;
-    }
-
-    /// <summary>
-    /// It populates the properties, used in the creation of a channel, with deadletter information.
-    /// </summary>
-    /// <param name="dic">Channel properties dictionary.</param>
-    /// <param name="name">Name of the queue.</param>
-    internal void Properties(Dictionary<string, string> dic, string name)
-    {
-        var arguments = CreateArguments(name);
-        foreach (var arg in arguments)
-        {
-            dic.Add(arg.Key, (string)arg.Value);
-        }
     }
 
     /// <summary>

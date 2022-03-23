@@ -1,4 +1,6 @@
-﻿using RabbitMQ.Client;
+﻿using System;
+using System.Collections.Generic;
+using RabbitMQ.Client;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
@@ -58,6 +60,7 @@ public class QueueInfo
 
     private QueueDeclareOk? queueDeclareOk;
     private PublicationAddress? publicationAddress;
+    private Dictionary<string, object>? arguments;
 
     /// <summary>
     /// Create a new Queue information with default options (durable, persistent, not exclusive).
@@ -99,12 +102,12 @@ public class QueueInfo
     /// <summary>
     /// Configuration of the queue, whether it is deleted after disconnection.
     /// </summary>
-    public bool AutoDelete { get; set; } = false;
+    public bool AutoDelete { get; set; }
 
     /// <summary>
     /// Configuration of the queue, if it is exclusive.
     /// </summary>
-    public bool Exclusive { get; set; } = false;
+    public bool Exclusive { get; set; }
 
     /// <summary>
     /// <para>
@@ -114,14 +117,54 @@ public class QueueInfo
     ///     By default, it is not active.
     /// </para>
     /// </summary>
-    public DeadLetterInfo DeadLetter { get; } = new DeadLetterInfo();
+    public DeadLetterInfo DeadLetter { get; } = new();
 
     /// <summary>
     /// <para>
     ///     Information to bind the queue to one or more exchanges.
     /// </para>
     /// </summary>
-    public QueueBindInfo BindInfo { get; } = new QueueBindInfo();
+    public QueueBindInfo BindInfo { get; } = new();
+
+    /// <summary>
+    /// <para>
+    ///     Add an argument to the queue.
+    /// </para>
+    /// <para>
+    ///     The arguments will be used in the queue declaration.
+    /// </para>
+    /// </summary>
+    /// <param name="name">The argument name.</param>
+    /// <param name="value">The argument value.</param>
+    /// <exception cref="ArgumentException">If the name is null or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">If value is null.</exception>
+    public void AddArgument(string name, object value)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+
+        arguments ??= new();
+        arguments[name] = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    /// <summary>
+    /// <para>
+    ///     Create arguments for queue declaration.
+    /// </para>
+    /// </summary>
+    /// <returns>A dictionary instance with the arguments.</returns>
+    public Dictionary<string, object> CreateArguments()
+    {
+        var declarationArguments = DeadLetter.CreateArguments(Name);
+
+        if (arguments is null) 
+            return declarationArguments;
+        
+        foreach (var kvp in arguments)
+            declarationArguments[kvp.Key] = kvp.Value;
+
+        return declarationArguments;
+    }
 
     internal QueueDeclareOk GetQueueDeclaration(IModel model, bool force = false)
     {
@@ -134,14 +177,12 @@ public class QueueInfo
         }
         else
         {
-            var arguments = DeadLetter.CreateArguments(Name);
-
             queueDeclareOk = model.QueueDeclare(
                 queue: Name,
                 durable: Durable,
                 exclusive: Exclusive,
                 autoDelete: AutoDelete,
-                arguments: arguments);
+                arguments: CreateArguments());
         }
 
         foreach (var bind in BindInfo.BoundExchangeInfos)

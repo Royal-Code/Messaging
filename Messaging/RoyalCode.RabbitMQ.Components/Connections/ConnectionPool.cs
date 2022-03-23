@@ -9,7 +9,7 @@ internal class ConnectionPool : IConnectionPool
 {
     private readonly ConnectionFactory[] connectionFactories;
     private readonly ILogger logger;
-    private int nextConnectionIndex = 0;
+    private int nextConnectionIndex;
     private IConnection? currentConnection;
 
     public ConnectionPool(
@@ -69,9 +69,12 @@ internal class ConnectionPool : IConnectionPool
             nextConnectionIndex = 0;
     }
 
-    private void Reconnector(object callbackObject)
+    private void Reconnector(object? callbackObject)
     {
-        Action<IConnection, bool> callback = (Action<IConnection, bool>)callbackObject;
+        if (callbackObject is null) 
+            throw new ArgumentNullException(nameof(callbackObject));
+        
+        var callback = (Action<IConnection, bool>)callbackObject;
 
         if (currentConnection?.IsOpen ?? false)
             callback(currentConnection, true);
@@ -107,16 +110,20 @@ internal class ConnectionPool : IConnectionPool
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to reconnect to RabbitMQ. Attempts: {0}. A new attempt will be done in {1}s",
+                    "Failed to reconnect to RabbitMQ. Attempts: {Attempts}. A new attempt will be done in {TotalSeconds}s",
                     attempts,
                     RetryConnectionDelay.TotalSeconds);
             }
         }
     }
 
-    private void BackToFirstConnection(object callbackObject)
+    private void BackToFirstConnection(object? callbackObject)
     {
-        Action<IConnection, bool> callback = (Action<IConnection, bool>)callbackObject;
+        if (callbackObject is null) 
+            throw new ArgumentNullException(nameof(callbackObject));
+
+
+        var callback = (Action<IConnection, bool>)callbackObject;
 
         logger.LogInformation(
             "The current connection with RabbitMQ node is not the first, attempts to back to the first node will be made");
@@ -146,7 +153,7 @@ internal class ConnectionPool : IConnectionPool
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to reconnect to the first node of RabbitMQ. Attempts: {attempts}. A new attempt will be done in {1}s",
+                    "Failed to reconnect to the first node of RabbitMQ. Attempts: {Attempts}. A new attempt will be done in {TotalSeconds}s",
                     attempts,
                     RetryConnectionDelay.TotalSeconds);
             }

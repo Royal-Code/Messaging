@@ -72,9 +72,8 @@ public class ConnectionManager
         return managed.AddConsumer(consumer);
     }
 
-    private class ManagedConnection
+    private class ManagedConnection : IConnectionStatus
     {
-        private readonly string name;
         private readonly IConnectionPool connectionPool;
         private readonly ILogger logger;
         private readonly LinkedList<ManagedConsumer> consumers = new();
@@ -85,11 +84,31 @@ public class ConnectionManager
 
         public ManagedConnection(string name, IConnectionPool connectionPool, ILogger logger)
         {
-            this.name = name;
+            Name = name;
             this.connectionPool = connectionPool;
             this.logger = logger;
 
             shutdownEventHandler = OnConnectionClosed;
+        }
+
+        /// <inheritdoc />
+        public string Name { get; }
+
+        /// <inheritdoc />
+        public bool IsConnected => currentConnection?.IsOpen ?? false;
+
+        /// <inheritdoc />
+        public int ConsumersCount
+        {
+            get
+            {
+                int count;
+                lock (consumers)
+                {
+                    count = consumers.Count;
+                }
+                return count;
+            }
         }
 
         public bool AddConsumer(IConnectionConsumer consumer)
@@ -107,7 +126,7 @@ public class ConnectionManager
         {
             if (currentConnection is not null)
             {
-                logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {Name}", name);
+                logger.LogDebug("Adding a consumer to current RabbitMQ connection for cluster name {Name}", Name);
 
                 consumer.Consume(currentConnection, false);
                 return true;
@@ -115,7 +134,7 @@ public class ConnectionManager
 
             if (TryGetOrCreateConnection(out var connection))
             {
-                logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {Name}", name);
+                logger.LogDebug("Adding a consumer to a new RabbitMQ connection for cluster name {Name}", Name);
 
                 consumer.Consume(connection!, false);
 
@@ -141,7 +160,7 @@ public class ConnectionManager
                     return true;
                 }
 
-                logger.LogInformation("Creating a RabbitMQ connection for cluster name {Name}", name);
+                logger.LogInformation("Creating a RabbitMQ connection for cluster name {Name}", Name);
 
                 try
                 {
@@ -149,13 +168,13 @@ public class ConnectionManager
                     Connected();
                     connection = currentConnection;
 
-                    logger.LogInformation("Connection to RabbitMQ realized for cluster name {Name}", name);
+                    logger.LogInformation("Connection to RabbitMQ realized for cluster name {Name}", Name);
 
                     return true;
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {Name}", name);
+                    logger.LogError(e, "Error while creating a RabbitMQ connection for cluster name {Name}", Name);
                     error = true;
                     Reconnect();
                     connection = null;
@@ -196,7 +215,7 @@ public class ConnectionManager
         {
             logger.LogError(
                 "An error occurred on a RabbitMQ connection for cluster name {Name}, a reconnection attempt will be made shortly, origin: {Initiator}, cause: {Cause}",
-                name, e.Initiator, e.Cause);
+                Name, e.Initiator, e.Cause);
 
             error = true;
 

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace RoyalCode.RabbitMQ.Components.Tests;
 
-public class T03_Channels
+public class T03_ChannelTests
 {
     [Fact]
     public void T01_GetChannelManager()
@@ -98,18 +98,4 @@ public class T03_Channels
         
         Assert.Same(first, second);
     }
-}
-
-public class TestChannelConsumer : IChannelConsumer
-{
-    public IChannelProvider? ChannelProvider { get; private set; }
-    
-    public void Consume(IChannelProvider provider)
-    {
-        ChannelProvider = provider;
-    }
-
-    public void ConnectionClosed() { }
-
-    public void ConnectionRecovered(bool autorecovered) { }
 }

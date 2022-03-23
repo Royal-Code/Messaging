@@ -25,6 +25,10 @@ public class Container
             {
                 options.AddConnectionStringName("test");
             });
+            services.ConfigureRabbitMQConnection("test", options =>
+            {
+                options.RetryConnectionDelay = TimeSpan.FromSeconds(1);
+            });
         }
         else
         {
