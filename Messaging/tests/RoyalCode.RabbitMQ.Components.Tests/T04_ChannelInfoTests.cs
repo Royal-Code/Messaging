@@ -61,8 +61,8 @@ public class T04_ChannelInfoTests
         Assert.True(info.Queue!.DeadLetter.Active);
 
         var args = info.Queue.CreateArguments();
-        Assert.True(args.Keys.Any(v => v == "x-dead-letter-exchange"));
-        Assert.True(args.Keys.Any(v => v == "x-dead-letter-routing-key"));
+        Assert.Contains(args.Keys, v => v == "x-dead-letter-exchange");
+        Assert.Contains(args.Keys, v => v == "x-dead-letter-routing-key");
         
         model.QueueDeclarePassive("Test_Persistent_Queue_With_Deadletter");
         model.QueueDelete("Test_Persistent_Queue_With_Deadletter", true, true);
