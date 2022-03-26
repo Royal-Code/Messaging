@@ -164,7 +164,7 @@ public class ChannelInfo
     /// <param name="model">Rabbit's <see cref="IModel"/> for declaration.</param>
     /// <param name="routingKey">Optional rounting key for publication on exchanges.</param>
     /// <returns>The publication address.</returns>
-    public PublicationAddress GetPublicationAddress(IModel model, string? routingKey)
+    public PublicationAddress GetPublicationAddress(IModel model, string? routingKey = null)
     {
         return Type == ChannelType.Queue
             ? Queue!.GetPublicationAddress(model)

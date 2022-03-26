@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using RabbitMQ.Client.Exceptions;
 using RoyalCode.RabbitMQ.Components.Communication;
@@ -67,6 +68,75 @@ public class T04_ChannelInfoTests
         model.QueueDeclarePassive("Test_Persistent_Queue_With_Deadletter");
         model.QueueDelete("Test_Persistent_Queue_With_Deadletter", true, true);
     }
-    
-    
+
+    [Fact]
+    public void T04_ThrowWhenGetConsumerQueueForExchangeWithoutQueue()
+    {
+        using var factory = new ModelFactory();
+        var model = factory.ChannelProvider.CreateChannel();
+
+        var info = ChannelInfo.FanoutExchange("Test_FanoutExchage");
+        Assert.Throws<InvalidOperationException>(() => info.GetConsumerQueue(model));
+    }
+
+    [Fact]
+    public void T05_FanoutExchange_DeclareForPublish()
+    {
+        using var factory = new ModelFactory();
+        var model = factory.ChannelProvider.CreateChannel();
+
+        var info = ChannelInfo.FanoutExchange("Test_FanoutExchage_ForPublish");
+        var address = info.GetPublicationAddress(model);
+
+        model.ExchangeDeclarePassive("Test_FanoutExchage_ForPublish");
+        model.ExchangeDelete("Test_FanoutExchage_ForPublish", false);
+    }
+
+    [Fact]
+    public void T06_FanoutExchange_DeclareForConsume()
+    {
+        using var factory = new ModelFactory();
+        var model = factory.ChannelProvider.CreateChannel();
+
+        var info = ChannelInfo.TemporaryQueue()
+            .BindToFanout("Test_FanoutExchage_ForConsume");
+        var ok = info.GetConsumerQueue(model);
+
+        model.QueueDeclarePassive(ok.QueueName);
+        model.ExchangeDeclarePassive("Test_FanoutExchage_ForConsume");
+
+        var ex = Assert.ThrowsAny<Exception>(() => model.ExchangeDelete("Test_FanoutExchage_ForConsume", true));
+        Assert.Contains("406", ex.Message);
+
+        model.Dispose();
+
+        model = factory.ChannelProvider.CreateChannel();
+        model.ExchangeDelete("Test_FanoutExchage_ForConsume", false);
+    }
+
+    [Fact]
+    public void T07_RouteExchange_DeclareForPublish()
+    {
+        using var factory = new ModelFactory();
+        var model = factory.ChannelProvider.CreateChannel();
+
+        var info = ChannelInfo.RouteExchange("Test_RouteExchange_ForPublish", "Test.Route");
+        var address = info.GetPublicationAddress(model);
+
+        model.ExchangeDeclarePassive("Test_RouteExchange_ForPublish");
+        model.ExchangeDelete("Test_RouteExchange_ForPublish", false);
+    }
+
+    [Fact]
+    public void T08_TopicExchange_DeclareForPublish()
+    {
+        using var factory = new ModelFactory();
+        var model = factory.ChannelProvider.CreateChannel();
+
+        var info = ChannelInfo.TopicExchange("Test_TopicExchange_ForPublish", "Test.Topic");
+        var address = info.GetPublicationAddress(model);
+
+        model.ExchangeDeclarePassive("Test_TopicExchange_ForPublish");
+        model.ExchangeDelete("Test_TopicExchange_ForPublish", false);
+    }
 }
