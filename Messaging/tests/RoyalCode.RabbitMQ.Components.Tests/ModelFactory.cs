@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Channels;
 using RoyalCode.RabbitMQ.Components.Connections;
@@ -37,6 +38,8 @@ public sealed class ModelFactory : IDisposable
     public IChannelProvider ChannelProvider => channelConsumer.ChannelProvider!;
 
     public IModel Model => ChannelProvider.GetSharedChannel();
+
+    public ILogger<T> CreateLogger<T>() => ServiceProvider.GetRequiredService<ILogger<T>>()!;
 
     public void WaitForConnected(TimeSpan? timeout = null)
     {

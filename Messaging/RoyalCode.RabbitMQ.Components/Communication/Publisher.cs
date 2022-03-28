@@ -53,7 +53,7 @@ public class Publisher : BaseComponent
     /// <exception cref="CommunicationException">
     ///     If the connection to RabbitMQ is closed.
     /// </exception>
-    public async Task Publish(PublicationMessage message, CancellationToken cancellationToken)
+    public async Task Publish(PublicationMessage message, CancellationToken cancellationToken = default)
     {
         if (ConnectionIsClosed)
             throw new CommunicationException(

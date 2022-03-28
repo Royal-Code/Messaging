@@ -1,5 +1,6 @@
 ﻿using RabbitMQ.Client;
 using System;
+using System.Text;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
@@ -13,12 +14,23 @@ public class PublicationMessage
     /// <summary>
     /// Creates a new message.
     /// </summary>
-    /// <param name="configureProperties">Action to configure basic properties of the publication, like headers.</param>
     /// <param name="body">The message content.</param>
-    public PublicationMessage(Action<IBasicProperties> configureProperties, ReadOnlyMemory<byte> body)
+    /// <param name="configureProperties">Action to configure basic properties of the publication, like headers.</param>
+    public PublicationMessage(ReadOnlyMemory<byte> body, Action<IBasicProperties>? configureProperties = null)
     {
         ConfigureProperties = configureProperties;
         Body = body;
+    }
+
+    /// <summary>
+    /// Creates a new message.
+    /// </summary>
+    /// <param name="body">The message content.</param>
+    /// <param name="configureProperties">Action to configure basic properties of the publication, like headers.</param>
+    public PublicationMessage(string body, Action<IBasicProperties>? configureProperties = null)
+    {
+        ConfigureProperties = configureProperties;
+        Body = Encoding.UTF8.GetBytes(body);
     }
 
     /// <summary>
