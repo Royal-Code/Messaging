@@ -14,7 +14,7 @@ namespace RoyalCode.RabbitMQ.Components.Communication;
 public class Receiver : BaseComponent
 {
     private readonly ChannelInfo channelInfo;
-    private readonly ILogger<Publisher> logger;
+    private readonly ILogger logger;
     private readonly ICollection<MessageListener> listeners = new LinkedList<MessageListener>();
     private readonly Dictionary<MessageListener, EventingBasicConsumer> consumersMap = new();
     private readonly ICollection<MessageListener> waitingListeners = new LinkedList<MessageListener>();
@@ -35,7 +35,7 @@ public class Receiver : BaseComponent
         IChannelManager channelManager,
         string clusterName,
         ChannelStrategy channelStrategy,
-        ILogger<Publisher> logger)
+        ILogger<Receiver> logger)
         : base(channelManager, clusterName, channelStrategy)
     {
         if (channelStrategy == ChannelStrategy.Pooled)

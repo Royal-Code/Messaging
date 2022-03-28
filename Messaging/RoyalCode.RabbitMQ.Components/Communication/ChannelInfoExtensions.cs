@@ -91,6 +91,27 @@ public static class ChannelInfoExtensions
 
     /// <summary>
     /// <para>
+    ///     Bind the queue to an exchange.
+    /// </para>
+    /// </summary>
+    /// <param name="channel">The channel information.</param>
+    /// <param name="exchangeChannel">A exchange channel to bind.</param>
+    /// <param name="routeKeys">Routing keys.</param>
+    /// <returns>The same instance for chained calls.</returns>
+    public static ChannelInfo BindTo(this ChannelInfo channel, ChannelInfo exchangeChannel, params string[] routeKeys)
+    {
+        if (channel.Type is not ChannelType.Queue)
+            throw new ChannelConfigurationException("Bind To can only be configurated for queues, and this channel type is exchange.");
+
+        if (exchangeChannel.Type is not ChannelType.Exchange)
+            throw new ChannelConfigurationException("The exchange channel must be of exchange type, and type is queue.");
+
+        channel.Queue!.BindInfo.BoundExchangeInfos.Add(new BoundExchangeInfo(exchangeChannel.Exchange!, routeKeys));
+        return channel;
+    }
+
+    /// <summary>
+    /// <para>
     ///     Bind the queue to an exchange of type fanout.
     /// </para>
     /// </summary>

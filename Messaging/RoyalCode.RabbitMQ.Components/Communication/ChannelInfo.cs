@@ -98,6 +98,13 @@ public class ChannelInfo
     public QueueInfo? Queue { get; }
 
     /// <summary>
+    /// Get the name of the exchange or of the queue.
+    /// </summary>
+    public string Name => Type == ChannelType.Exchange
+        ? Exchange!.Name
+        : Queue!.Name;
+
+    /// <summary>
     /// <para>
     ///     Creates a new information about a channel with RabbitMQ that can publish messages to an exchange.
     /// </para>
