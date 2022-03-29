@@ -21,4 +21,4 @@ jobs:
       run: sudo /home/runner/.dotnet/dotnet build ./Messaging/RoyalCode.RabbitMQ.Components/RoyalCode.RabbitMQ.Components.csproj -c Release
       
     - name: publish nuget package
-      run: sudo /home/runner/.dotnet/dotnet nuget push ./**/RoyalCode.RabbitMQ.Components.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      run: sudo /home/runner/.dotnet/dotnet nuget push ./**/RoyalCode.RabbitMQ.Components*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
