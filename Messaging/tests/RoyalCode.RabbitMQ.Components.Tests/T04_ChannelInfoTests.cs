@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Threading.Tasks;
 using RabbitMQ.Client.Exceptions;
 using RoyalCode.RabbitMQ.Components.Communication;
 using Xunit;
@@ -9,7 +9,7 @@ namespace RoyalCode.RabbitMQ.Components.Tests;
 public class T04_ChannelInfoTests
 {
     [Fact]
-    public void T01_TempQueue()
+    public async Task T01_TempQueue()
     {
         using var factory = new ModelFactory();
         var model = factory.ChannelProvider.CreateChannel();
@@ -22,6 +22,8 @@ public class T04_ChannelInfoTests
         model.QueueDeclarePassive("Test_Temp_Queue");
         
         model.Dispose();
+        await Task.Delay(30);
+
         factory.ConnectionProvider.Connection.Close(1, "Closing for tests purposes");
         factory.WaitForConnected();
         
@@ -31,7 +33,7 @@ public class T04_ChannelInfoTests
     }
 
     [Fact]
-    public void T02_PersistentQueue()
+    public async Task T02_PersistentQueueAsync()
     {
         using var factory = new ModelFactory();
         var model = factory.ChannelProvider.CreateChannel();
@@ -42,6 +44,8 @@ public class T04_ChannelInfoTests
         model.QueueDeclarePassive("Test_Persistent_Queue");
         
         model.Dispose();
+        await Task.Delay(30);
+
         factory.ConnectionProvider.Connection.Close(1, "Closing for tests purposes");
         factory.WaitForConnected();
         
@@ -93,7 +97,7 @@ public class T04_ChannelInfoTests
     }
 
     [Fact]
-    public void T06_FanoutExchange_DeclareForConsume()
+    public async Task T06_FanoutExchange_DeclareForConsumeAsync()
     {
         using var factory = new ModelFactory();
         var model = factory.ChannelProvider.CreateChannel();
@@ -109,6 +113,7 @@ public class T04_ChannelInfoTests
         Assert.Contains("406", ex.Message);
 
         model.Dispose();
+        await Task.Delay(30);
 
         model = factory.ChannelProvider.CreateChannel();
         model.ExchangeDelete("Test_FanoutExchage_ForConsume", false);
