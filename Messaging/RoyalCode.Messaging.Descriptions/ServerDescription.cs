@@ -8,7 +8,7 @@ namespace RoyalCode.Messaging.Descriptions;
 public class ServerDescription
 {
     /// <summary>
-    /// 
+    /// Creates a new server description.
     /// </summary>
     /// <param name="broker">See <see cref="Broker"/>.</param>
     /// <param name="name">See <see cref="Name"/>.</param>
