@@ -24,7 +24,7 @@ public class ChannelDescription
         string name,
         string? description,
         Type messageType,
-        ChennelPurpose purpose,
+        ChannelPurpose purpose,
         string broker,
         IReadOnlyDictionary<string, string>? properties)
     {
@@ -54,7 +54,7 @@ public class ChannelDescription
     /// <summary>
     /// Determines the purpose for which the message will be used by the application.
     /// </summary>
-    public ChennelPurpose Purpose { get; }
+    public ChannelPurpose Purpose { get; }
 
     /// <summary>
     /// <para>

@@ -5,7 +5,7 @@
 ///     Determines the purpose for which the message will be used by the application.
 /// </para>
 /// </summary>
-public enum ChennelPurpose
+public enum ChannelPurpose
 {
     /// <summary>
     /// Used to publish messages.

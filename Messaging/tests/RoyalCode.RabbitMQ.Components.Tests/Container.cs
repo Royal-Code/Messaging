@@ -35,7 +35,6 @@ public class Container
             configure.Invoke(services);    
         }
         
-
         var sp = services.BuildServiceProvider();
 
         return sp;

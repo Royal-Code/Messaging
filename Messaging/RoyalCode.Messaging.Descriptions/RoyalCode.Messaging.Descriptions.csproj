@@ -13,4 +13,8 @@
 		<PackageTags>RoyalCode Messaging</PackageTags>
 	</PropertyGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+	  <PackageReference Include="System.Text.Json" Version="4.7.2" />
+	</ItemGroup>
+
 </Project>

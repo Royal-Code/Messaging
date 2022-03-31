@@ -13,4 +13,9 @@
 		<PackageTags>RoyalCode Messaging</PackageTags>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\RoyalCode.Messaging.Descriptions\RoyalCode.Messaging.Descriptions.csproj" />
+	  <ProjectReference Include="..\RoyalCode.Messaging\RoyalCode.Messaging.csproj" />
+	</ItemGroup>
+
 </Project>
