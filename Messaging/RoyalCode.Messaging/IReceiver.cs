@@ -1,24 +1,20 @@
-using System;
-using System.Threading.Tasks;
+namespace RoyalCode.Messaging;
 
-namespace RoyalCode.Messaging
+/// <summary>
+/// Service/Component that listens to message queues and passes the message on to listeners.
+/// </summary>
+/// <typeparam name="TMessage">Object type received from messaging.</typeparam>
+public interface IReceiver<TMessage> : IDisposable
 {
     /// <summary>
-    /// Serviço que escuta filas de mensageria e repassa a mensagem para ouvintes.
+    /// Starts listening to a channel by sending messages to the listener.
     /// </summary>
-    /// <typeparam name="TMessage">Modelo de dados obtido via mensageria.</typeparam>
-    public interface IReceiver<TMessage> : IDisposable
-    {
-        /// <summary>
-        /// Inicia a escuta de um canal enviando as mensagens para o ouvinte.
-        /// </summary>
-        /// <param name="handler">Componente que processa as mensagens recebidas do canal.</param>
-        void Listen(Func<TMessage, Task> handler);
+    /// <param name="handler">Component that processes the messages received from the channel.</param>
+    void Listen(Func<TMessage, Task> handler);
 
-        /// <summary>
-        /// Inicia a escuta de um canal enviando as mensagens para o ouvinte.
-        /// </summary>
-        /// <param name="handler">Componente que processa as mensagens recebidas do canal.</param>
-        void Listen(Func<IIncomingMessage<TMessage>, Task> handler);
-    }
+    /// <summary>
+    /// Starts listening to a channel by sending messages to the listener.
+    /// </summary>
+    /// <param name="handler">Component that processes the messages received from the channel.</param>
+    void Listen(Func<IIncomingMessage<TMessage>, Task> handler);
 }

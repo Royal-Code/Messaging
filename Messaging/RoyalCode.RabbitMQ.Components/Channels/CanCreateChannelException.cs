@@ -1,5 +1,3 @@
-using System;
-
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
 /// <summary>

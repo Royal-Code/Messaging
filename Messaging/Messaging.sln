@@ -16,9 +16,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".items", ".items", "{3D8E80
 		base.targets = base.targets
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalCode.RabbitMQ.Components.Tests", "tests\RoyalCode.RabbitMQ.Components.Tests\RoyalCode.RabbitMQ.Components.Tests.csproj", "{CEB651B9-3A7E-45B0-8B82-393388350B76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.RabbitMQ.Components.Tests", "tests\RoyalCode.RabbitMQ.Components.Tests\RoyalCode.RabbitMQ.Components.Tests.csproj", "{CEB651B9-3A7E-45B0-8B82-393388350B76}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8A7885FE-B93F-44D5-8915-EB13FEEDAAC3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.Messaging.Abstractions", "RoyalCode.Messaging.Abstractions\RoyalCode.Messaging.Abstractions.csproj", "{5C3E591C-EC66-429D-AC35-703EDEEC84EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalCode.Messaging.Descriptions", "RoyalCode.Messaging.Descriptions\RoyalCode.Messaging.Descriptions.csproj", "{0612200F-B769-4F58-B285-9231DAD3B827}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +42,14 @@ Global
 		{CEB651B9-3A7E-45B0-8B82-393388350B76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEB651B9-3A7E-45B0-8B82-393388350B76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEB651B9-3A7E-45B0-8B82-393388350B76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C3E591C-EC66-429D-AC35-703EDEEC84EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C3E591C-EC66-429D-AC35-703EDEEC84EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C3E591C-EC66-429D-AC35-703EDEEC84EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C3E591C-EC66-429D-AC35-703EDEEC84EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0612200F-B769-4F58-B285-9231DAD3B827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0612200F-B769-4F58-B285-9231DAD3B827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0612200F-B769-4F58-B285-9231DAD3B827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0612200F-B769-4F58-B285-9231DAD3B827}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +58,8 @@ Global
 		{5C5CCAB2-12F4-4F02-92F6-3AF076D8CDF9} = {14851B0D-C93D-4FB6-8980-A92BFBC4E9A6}
 		{56D4A043-B8D3-469E-AC00-A74355494709} = {BD27BD72-2D47-4753-8293-4F18FB760D5C}
 		{CEB651B9-3A7E-45B0-8B82-393388350B76} = {8A7885FE-B93F-44D5-8915-EB13FEEDAAC3}
+		{5C3E591C-EC66-429D-AC35-703EDEEC84EC} = {14851B0D-C93D-4FB6-8980-A92BFBC4E9A6}
+		{0612200F-B769-4F58-B285-9231DAD3B827} = {14851B0D-C93D-4FB6-8980-A92BFBC4E9A6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9036A3F7-6E12-400A-90C3-4FC496A89C3C}

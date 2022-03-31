@@ -8,7 +8,7 @@
 		<AssemblyVersion>1.0.0</AssemblyVersion>
 		<FileVersion>1.0.0</FileVersion>
 		<Description>
-			Generic components for sending an object as a message through a message bus.
+			Library for describes the messages published and received over a message bus.
 		</Description>
 		<PackageTags>RoyalCode Messaging</PackageTags>
 	</PropertyGroup>

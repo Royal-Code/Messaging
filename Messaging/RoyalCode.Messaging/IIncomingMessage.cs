@@ -1,87 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace RoyalCode.Messaging;
 
-namespace RoyalCode.Messaging
+/// <summary>
+/// Message received by the client from a broker, which can be listened to by a <see cref="IReceiver{TMessage}"/>.
+/// </summary>
+/// <typeparam name="TMessage">Type of message received.</typeparam>
+public interface IIncomingMessage<TMessage> : IIncomingMessage
 {
     /// <summary>
-    /// Mensagem recebida pelo cliente de um broker, a qual poderá ser escutada por um <see cref="IReceiver{TMessage}"/>;
+    /// The message object.
     /// </summary>
-    /// <typeparam name="TMessage">Tipo da mensagem recebida.</typeparam>
-    public interface IIncomingMessage<TMessage> : IIncomingMessage
-    {
-        /// <summary>
-        /// A mensagem.
-        /// </summary>
-        new TMessage Payload { get; }
-    }
+    new TMessage Payload { get; }
+}
+
+/// <summary>
+/// Message received by the client from a broker, which can be listened to by a <see cref="IReceiver{TMessage}"/>.
+/// </summary>
+public interface IIncomingMessage
+{
+    /// <summary>
+    /// <para>
+    ///     The message Id.
+    /// </para>
+    /// <para>
+    ///     If the object type of the <see cref="Payload"/> has an 'Id' or 'Guid' property of type <see cref="Guid"/>,
+    ///     this Id must be the same as the one in the message (<see cref="Payload"/>).
+    /// </para>
+    /// </summary>
+    Guid Id { get; }
 
     /// <summary>
-    /// Mensagem recebida pelo cliente de um broker, a qual poderá ser escutada por um <see cref="IReceiver{TMessage}"/>;
+    /// Type (class) of message object.
     /// </summary>
-    public interface IIncomingMessage
-    {
-        /// <summary>
-        /// <para>
-        ///     Id da mensagem.
-        /// </para>
-        /// <para>
-        ///     Se tipo de <see cref="Payload"/> implementar <see cref="IHasId{TId}"/> ou <see cref="IHasGuid"/>
-        ///     este Id deverá ser o mesmo da mensagem (<see cref="Payload"/>).
-        /// </para>
-        /// </summary>
-        Guid Id { get; }
+    Type MessageType { get; }
 
-        /// <summary>
-        /// Tipo (classe) do objeto da mensagem.
-        /// </summary>
-        Type MessageType { get; }
+    /// <summary>
+    /// <para>
+    ///     Collection of sent/published properties attached to the message.
+    /// </para>
+    /// <para>
+    ///     For example: properties sent in the message header.
+    /// </para>
+    /// </summary>
+    IEnumerable<KeyValuePair<string, object>> Properties { get; }
 
-        /// <summary>
-        /// Coleção de propriedades enviadas/publicadas adjunto a mensagem.
-        /// </summary>
-        IEnumerable<KeyValuePair<string, object>> Properties { get; }
+    /// <summary>
+    /// <para>
+    ///     User sender of the message (token, code, subject, identifier).
+    /// </para>
+    /// </summary>
+    string UserName { get; }
 
-        /// <summary>
-        /// <para>
-        ///     Usuário remetente da mensagem (código, subject, identificador).
-        /// </para>
-        /// </summary>
-        string UserName { get; }
+    /// <summary>
+    /// The broker name (ex.: RabbitMQ, Kafka).
+    /// </summary>
+    string Broker { get; }
 
-        /// <summary>
-        /// O nome do broker.
-        /// </summary>
-        string Broker { get; }
+    /// <summary>
+    /// The message object.
+    /// </summary>
+    object Payload { get; }
 
-        /// <summary>
-        /// A mensagem.
-        /// </summary>
-        object Payload { get; }
+    /// <summary>
+    /// <para>
+    ///     Flags the message to be rejected.
+    /// </para>
+    /// <para>
+    ///     The message will be discarded, and may fall into a deadletter queue, if configured.
+    /// </para>
+    /// </summary>
+    void Reject();
 
-        /// <summary>
-        /// <para>
-        ///     Marca a mensagem para ser rejeitada.
-        /// </para>
-        /// <para>
-        ///     A mensagem será descartada, podendo cair um deadletter se configurado.
-        /// </para>
-        /// </summary>
-        void Reject();
-
-        /// <summary>
-        /// <para>
-        ///     Marca a mensagem como rejeitada porém para ser reentregue.
-        /// </para>
-        /// <para>
-        ///     Por padrão o tempo de sono é de 2000 milisegundos. Esse valor pode ser alterado através do
-        ///     parâmetro <paramref name="sleepTime"/>.
-        /// </para>
-        /// <para>
-        ///     O tempo de sono é importante para a reentrega, pois o sistema pode ficar em loop pedindo 
-        ///     reentregas e isso pode acabar consumindo recursos desnecessários.
-        /// </para>
-        /// </summary>
-        /// <param name="sleepTime">Tempo de sono em milisegundos.</param>
-        void Redelivery(int sleepTime = 2000);
-    }
+    /// <summary>
+    /// <para>
+    ///     Flags the message as rejected but to be redelivered.
+    /// </para>
+    /// <para>
+    ///     By default the sleep time is 2000 milliseconds. 
+    ///     This value can be changed via the <paramref name="sleepTime"/> parameter.
+    /// </para>
+    /// <para>
+    ///     Sleep time is important for redelivery, 
+    ///     because the system can be in a loop asking for redeliveries
+    ///     and this can end up consuming unnecessary resources.
+    /// </para>
+    /// </summary>
+    /// <param name="sleepTime">Sleep time in milliseconds.</param>
+    void Redelivery(int sleepTime = 2000);
 }

@@ -1,32 +1,32 @@
-﻿using System.Threading.Tasks;
+﻿namespace RoyalCode.Messaging;
 
-namespace RoyalCode.Messaging
+/// <summary>
+/// <para>
+///     Component for sending and receiving messages between systems via a messaging broker.
+/// </para>
+/// <para>
+///     This is the main component of these libraries for publishing and receiving messages.
+/// </para>
+/// </summary>
+public interface IMessageBus
 {
     /// <summary>
-    /// <para>
-    ///     Componente para enviar e receber mensagens entre sistemas.
-    /// </para>
+    /// Gets a message publisher of a certain type.
     /// </summary>
-    public interface IMessageBus
-    {
-        /// <summary>
-        /// Obtém um publicador de mensagens de um determinado tipo.
-        /// </summary>
-        /// <typeparam name="TMessage">Tipo da mensagem.</typeparam>
-        /// <returns>Uma instância de um publicador de mensagens.</returns>
-        IPublisher<TMessage> CreatePublisher<TMessage>();
+    /// <typeparam name="TMessage">The message type.</typeparam>
+    /// <returns>An instance of a message publisher.</returns>
+    IPublisher<TMessage> CreatePublisher<TMessage>();
 
-        /// <summary>
-        /// Obtém um serviço para escuta de filas de mensagens de um determinado tipo.
-        /// </summary>
-        /// <typeparam name="TMessage">Tipo da mensagem.</typeparam>
-        /// <returns>Uma instância da escuta de mensagens.</returns>
-        IReceiver<TMessage> CreateReceiver<TMessage>();
+    /// <summary>
+    /// Gets a service for listening to message queues of a certain type.
+    /// </summary>
+    /// <typeparam name="TMessage">The message type.</typeparam>
+    /// <returns>An instance of a message receiver.</returns>
+    IReceiver<TMessage> CreateReceiver<TMessage>();
 
-        /// <summary>
-        /// Envia uma mensagem com os informações do modelo de dados.
-        /// </summary>
-        /// <param name="instance">Mensagem para enviar.</param>
-        Task Publish<TMessage>(TMessage instance);
-    }
+    /// <summary>
+    /// Sends a message with the data model information.
+    /// </summary>
+    /// <param name="instance">The message to send.</param>
+    Task Publish<TMessage>(TMessage instance);
 }

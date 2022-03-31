@@ -1,28 +1,24 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+namespace RoyalCode.Messaging;
 
-namespace RoyalCode.Messaging
+/// <summary>
+/// A messaging component for publishing messages to one or more brokers 
+/// determined by the configuration of the message type (class).
+/// </summary>
+/// <typeparam name="TMessage">Modelo de dado da mensagem.</typeparam>
+public interface IPublisher<TMessage> : IDisposable
 {
     /// <summary>
-    /// Componente de mensageria para publicar de mensagem em um determinado canal.
+    /// Sends a message with the data model information.
     /// </summary>
-    /// <typeparam name="TMessage">Modelo de dado da mensagem.</typeparam>
-    public interface IPublisher<TMessage> : IDisposable
-    {
-        /// <summary>
-        /// Envia uma mensagem com os informações do modelo de dados.
-        /// </summary>
-        /// <param name="instance">Modelo de dados para enviar na mensagem.</param>
-        /// <param name="token">Token para cancelamento da task.</param>
-        Task PublishAsync(TMessage instance, CancellationToken token = default);
-        
-        /// <summary>
-        /// Envia uma mensagem com os informações do modelo de dados para uma rota determinada.
-        /// </summary>
-        /// <param name="instance">Modelo de dados para enviar na mensagem.</param>
-        /// <param name="routeKey">Chave para a rota.</param>
-        /// <param name="token">Token para cancelamento da task.</param>
-        Task PublishAsync(TMessage instance, string routeKey, CancellationToken token = default);
-    }
+    /// <param name="instance">Data model to send in the message.</param>
+    /// <param name="token">Cancellation token.</param>
+    Task PublishAsync(TMessage instance, CancellationToken token = default);
+
+    /// <summary>
+    /// Sends a message with the data model information for a given route.
+    /// </summary>
+    /// <param name="instance">Data model to send in the message.</param>
+    /// <param name="routeKey">The route key.</param>
+    /// <param name="token">Cancellation token.</param>
+    Task PublishAsync(TMessage instance, string routeKey, CancellationToken token = default);
 }
