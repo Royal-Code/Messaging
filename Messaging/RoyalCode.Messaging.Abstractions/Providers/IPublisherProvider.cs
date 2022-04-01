@@ -1,4 +1,4 @@
-namespace RoyalCode.Messaging.Abstractions.Bus;
+namespace RoyalCode.Messaging.Abstractions.Providers;
 
 /// <summary>
 /// <para>

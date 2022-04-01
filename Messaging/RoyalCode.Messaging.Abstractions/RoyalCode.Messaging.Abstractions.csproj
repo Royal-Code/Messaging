@@ -3,7 +3,7 @@
 	<Import Project="..\base.targets" />
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net5;net6</TargetFrameworks>
+		<TargetFrameworks>netstandard2.1;net5;net6</TargetFrameworks>
 		<Version>1.0.0-preview1.0</Version>
 		<AssemblyVersion>1.0.0</AssemblyVersion>
 		<FileVersion>1.0.0</FileVersion>
@@ -16,6 +16,42 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\RoyalCode.Messaging.Descriptions\RoyalCode.Messaging.Descriptions.csproj" />
 	  <ProjectReference Include="..\RoyalCode.Messaging\RoyalCode.Messaging.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net5' ">
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6' ">
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Resources.pt.resx">
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

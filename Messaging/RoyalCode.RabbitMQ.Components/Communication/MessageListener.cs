@@ -13,7 +13,7 @@ public class MessageListener
     /// <summary>
     /// Handler of RabbitMQ events/messages.
     /// </summary>
-    public EventHandler<BasicDeliverEventArgs> Consumer { get; }
+    public EventHandler<BasicDeliverEventArgs> Consumer { get; } = null!;
 
     /// <summary>
     /// <para>

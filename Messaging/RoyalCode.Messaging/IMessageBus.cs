@@ -28,5 +28,6 @@ public interface IMessageBus
     /// Sends a message with the data model information.
     /// </summary>
     /// <param name="instance">The message to send.</param>
-    Task Publish<TMessage>(TMessage instance);
+    /// <param name="token">Cancellation token.</param>
+    Task PublishAsync<TMessage>(TMessage instance, CancellationToken token = default);
 }

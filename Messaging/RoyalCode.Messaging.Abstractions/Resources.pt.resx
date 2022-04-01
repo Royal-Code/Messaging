@@ -1,0 +1,26 @@
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="PublishNotConfigured" xml:space="preserve">
+        <value>Publicador para a classe '{0}' não configurada</value>
+    </data>
+    <data name="OnPublishException" xml:space="preserve">
+        <value>Uma exception ocorreu ao publicar uma mensagem do tipo '{0}' para o publicador do tipo '{1}'</value>
+    </data>
+    <data name="PublishResultException" xml:space="preserve">
+        <value>Um ou mais erros ocorreram durante a publicação da mensagem do tipo '{0}', veja mais detalhes nas exceções internas</value>
+    </data>
+    <data name="ReceiverNotConfigured" xml:space="preserve">
+        <value>Receptor de mensagens para a classe {0} não configurado</value>
+    </data>
+</root>

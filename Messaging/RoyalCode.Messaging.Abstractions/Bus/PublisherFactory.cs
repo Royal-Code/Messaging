@@ -1,19 +1,32 @@
+using Microsoft.Extensions.Logging;
+using RoyalCode.Messaging.Abstractions.Handlers;
+using RoyalCode.Messaging.Abstractions.Providers;
+
 namespace RoyalCode.Messaging.Abstractions.Bus;
 
 /// <summary>
 /// Factory to create <see cref="IPublisher{TMessage}"/> through <see cref="IPublisherProvider"/>.
 /// </summary>
-public class PublisherFactory // may be ChannelFactory and IChannelProvider for create publishers and receivers ?
+public class PublisherFactory
 {
     private readonly IEnumerable<IPublisherProvider> providers;
+    private readonly IExceptionHandlersFactory exceptionHandlersFactory;
+    private readonly ILoggerFactory loggerFactory;
 
     /// <summary>
     /// Creates a new factory with the providers.
     /// </summary>
     /// <param name="providers">The many (or only one) publishers providers.</param>
-    public PublisherFactory(IEnumerable<IPublisherProvider> providers)
+    /// <param name="exceptionHandlersFactory">Exception handlers factory.</param>
+    /// <param name="loggerFactory">Logger factory.</param>
+    public PublisherFactory(
+        IEnumerable<IPublisherProvider> providers,
+        IExceptionHandlersFactory exceptionHandlersFactory,
+        ILoggerFactory loggerFactory)
     {
         this.providers = providers;
+        this.exceptionHandlersFactory = exceptionHandlersFactory;
+        this.loggerFactory = loggerFactory;
     }
     
     /// <summary>
@@ -52,7 +65,10 @@ public class PublisherFactory // may be ChannelFactory and IChannelProvider for 
 
             if (multiPublisher is null)
             {
-                multiPublisher = new MultiPublisher<TMessage>();
+                multiPublisher = new MultiPublisher<TMessage>(
+                    exceptionHandlersFactory,
+                    loggerFactory.CreateLogger<MultiPublisher<TMessage>>());
+                
                 multiPublisher.AddPublisher(publisher);
                 publisher = multiPublisher;
             }
