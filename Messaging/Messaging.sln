@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8A7885FE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.Messaging.Abstractions", "RoyalCode.Messaging.Abstractions\RoyalCode.Messaging.Abstractions.csproj", "{5C3E591C-EC66-429D-AC35-703EDEEC84EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalCode.Messaging.Descriptions", "RoyalCode.Messaging.Descriptions\RoyalCode.Messaging.Descriptions.csproj", "{0612200F-B769-4F58-B285-9231DAD3B827}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoyalCode.Messaging.Descriptions", "RoyalCode.Messaging.Descriptions\RoyalCode.Messaging.Descriptions.csproj", "{0612200F-B769-4F58-B285-9231DAD3B827}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
