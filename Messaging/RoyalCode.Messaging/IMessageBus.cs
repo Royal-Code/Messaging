@@ -2,7 +2,7 @@
 
 /// <summary>
 /// <para>
-///     Component for sending and receiving messages between systems via a messaging broker.
+///     Component for sending and receiving messages between systems via a message broker.
 /// </para>
 /// <para>
 ///     This is the main component of these libraries for publishing and receiving messages.

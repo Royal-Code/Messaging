@@ -21,4 +21,9 @@ public class ChannelsExplorer : List<ChannelDescription>
     /// A collection of server description.
     /// </summary>
     public ICollection<ServerDescription> Servers { get; } = new LinkedList<ServerDescription>();
+
+    /// <summary>
+    /// A collection of channels descriptions.
+    /// </summary>
+    public ICollection<ChannelDescription> Channels { get; } = new LinkedList<ChannelDescription>();
 }
