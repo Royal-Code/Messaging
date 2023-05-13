@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using System;
-using System.Collections.Generic;
 
 namespace RoyalCode.RabbitMQ.Components.Connections;
 
@@ -16,7 +14,7 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 ///     using the <see cref="ConnectionPoolOptions"/> getted from <see cref="IOptionsMonitor{TOptions}"/>.
 /// </para>
 /// </summary>
-public class ConnectionPoolFactory
+public sealed class ConnectionPoolFactory
 {
     private readonly IOptionsMonitor<ConnectionPoolOptions> options;
     private readonly IConfiguration configuration;
@@ -60,7 +58,7 @@ public class ConnectionPoolFactory
         if (!options.HasConnections())
             throw new InvalidOperationException($"None connection configurated for RabbitMQ Cluster name '{name}'");
 
-        var connectionStrings = GetConnectionStrings(options.csNames);
+        var connectionStrings = GetConnectionStrings(options.ConnectionStringNames);
 
         var connectionFactories = CreateConnectionInfos(name, connectionStrings);
 
@@ -74,7 +72,7 @@ public class ConnectionPoolFactory
             loggerFactory.CreateLogger<ConnectionPool>());
     }
 
-    private string[] GetConnectionStrings(List<string> csNames)
+    private string[] GetConnectionStrings(IList<string> csNames)
     {
         string[] connectionStrings = new string[csNames.Count];
 
@@ -82,9 +80,8 @@ public class ConnectionPoolFactory
         {
             var csName = csNames[i];
 
-            var cs = configuration.GetConnectionString(csName);
-            if (cs is null)
-                throw new InvalidOperationException($"The connection string with name '{csName}' was not found");
+            var cs = configuration.GetConnectionString(csName)
+                ?? throw new InvalidOperationException($"The connection string with name '{csName}' was not found");
 
             if (decrypter?.TryDecrypt(csName, cs, out var decrypted) ?? false)
                 cs = decrypted;
@@ -95,7 +92,7 @@ public class ConnectionPoolFactory
         return connectionStrings;
     }
 
-    private ConnectionFactory[] CreateConnectionInfos(string name, string[] connectionStrings)
+    private static ConnectionFactory[] CreateConnectionInfos(string name, string[] connectionStrings)
     {
         var connections = new ConnectionFactory[connectionStrings.Length];
 
@@ -103,9 +100,11 @@ public class ConnectionPoolFactory
         {
             var cs = connectionStrings[i];
 
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            cf.RequestedConnectionTimeout = TimeSpan.FromSeconds(120);
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true,
+                RequestedConnectionTimeout = TimeSpan.FromSeconds(120)
+            };
 
             var parts = cs.Split(';');
             foreach (var part in parts)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using RabbitMQ.Client;
 
 namespace RoyalCode.RabbitMQ.Components.Connections;
 
@@ -15,36 +16,42 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 ///     and notify the connectionProvider consumers.
 /// </para>
 /// </summary>
-public interface IConnectionConsumer : IDisposable
+public interface IConnectionConsumer
 {
     /// <summary>
     /// <para>
     ///     This method will be triggered by <see cref="ConnectionManager"/> as soon as you add it as a consumer
-    ///     and there is an open connectionProvider.
+    ///     and there is an open connection.
     /// </para>
     /// <para>
-    ///     The connectionProvider will be opened as soon as the first consumer is added to 
-    ///     the <see cref="ConnectionManager"/>. Subsequent consumers will receive the previously 
-    ///     opened connectionProvider immediately.
+    ///     The connection will be opened as soon as the first consumer is added to 
+    ///     the <see cref="ConnectionManager"/> or <see cref="ManagedConnection"/>. 
+    ///     Subsequent consumers will receive the previously opened connectionProvider immediately.
     /// </para>
     /// </summary>
-    /// <param name="connectionProvider">An open connectionProvider with RabbitMQ.</param>
-    void Consume(IConnectionProvider connectionProvider);
+    /// <param name="connection">An open connection with RabbitMQ.</param>
+    void Consume(IConnection connection);
 
     /// <summary>
     /// <para>
     ///     When a disconnection occurs, <see cref="ConnectionManager"/> will attempt to establish
-    ///     a new connectionProvider, and this method will be triggered for all consumers.
+    ///     a new connection, and this method will be triggered for all consumers.
     /// </para>
     /// <para>
-    ///     When the new connectionProvider is received by consumers, the channels and message receivers must be recreated.
+    ///     When the new connection is received by consumers, the channels and message receivers must be recreated.
     /// </para>
     /// </summary>
-    /// <param name="autorecovered">If the connectionProvider was auto recovered</param>
-    void Reload(bool autorecovered);
+    /// <param name="connection">An open connection with RabbitMQ.</param>
+    /// <param name="autorecovered">If the connection was auto recovered</param>
+    void Reloaded(IConnection connection, bool autorecovered);
 
     /// <summary>
-    /// Informe all consumers that the connectionProvider was closed.
+    /// <para>
+    ///     Informe all consumers that the connection was closed and the <see cref="ManagedConnection"/> disposed.
+    /// </para>
+    /// <para>
+    ///     The connection will not be reopened.
+    /// </para>
     /// </summary>
     void Closed();
 }

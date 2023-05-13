@@ -11,7 +11,9 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 /// </summary>
 public class ConnectionPoolOptions
 {
-    internal List<string> csNames = new List<string>();
+    private readonly List<string> csNames = new();
+
+    internal IList<string> ConnectionStringNames => csNames;
 
     /// <summary>
     /// If connection manager should try to go back to the first connection.

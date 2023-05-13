@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using System;
-using System.Threading;
 
 namespace RoyalCode.RabbitMQ.Components.Connections;
 
-internal class ConnectionPool : IConnectionPool
+internal sealed class ConnectionPool : IConnectionPool
 {
     private readonly ConnectionFactory[] connectionFactories;
     private readonly ILogger logger;

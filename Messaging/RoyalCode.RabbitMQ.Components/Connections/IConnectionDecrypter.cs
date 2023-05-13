@@ -12,7 +12,7 @@ public interface IConnectionDecrypter
     /// <param name="encryptedConnectionString">The encrypted connection string value.</param>
     /// <param name="decryptedConnectionString">The decrypted connection string value.</param>
     /// <returns>True if the string was decripted, false otherwise</returns>
-    /// <exception cref="System.NotSupportedException">
+    /// <exception cref="NotSupportedException">
     ///     When the connection string is encrypted and cannot be decrypted for some reason.
     /// </exception>
     bool TryDecrypt(string connectionName, string encryptedConnectionString, out string decryptedConnectionString);

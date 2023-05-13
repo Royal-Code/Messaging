@@ -23,3 +23,8 @@ public interface IChannelManager
     /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
     IChannelConsumption Consume(string name, IChannelConsumer consumer);
 }
+
+public sealed class ManagedChannel
+{
+
+}
