@@ -10,7 +10,7 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 ///     release the consumer.
 /// </para>
 /// </summary>
-public interface IConsumerStatus
+public interface IConnectionConsumerStatus
 {
     /// <summary>
     /// Check if the consumer is connected to the RabbitMQ node.

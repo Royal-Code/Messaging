@@ -81,7 +81,7 @@ public sealed class ManagedConnection
     /// </summary>
     /// <param name="consumer">The consumer.</param>
     /// <returns></returns>
-    public IConsumerStatus AddConsumer(IConnectionConsumer consumer)
+    public IConnectionConsumerStatus AddConsumer(IConnectionConsumer consumer)
     {
         var managed = new ManagedConsumer(this, consumer);
         lock (consumers)
@@ -203,7 +203,7 @@ public sealed class ManagedConnection
         }
     }
 
-    private class ManagedConsumer : IConsumerStatus
+    private class ManagedConsumer : IConnectionConsumerStatus
     {
         private readonly ManagedConnection managed;
         private readonly IConnectionConsumer consumer;

@@ -1,5 +1,4 @@
 using RabbitMQ.Client;
-using System;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -14,17 +13,30 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public interface IChannelManager
 {
     /// <summary>
+    /// Creates a new RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>.
+    /// </summary>
+    /// <param name="name">The RabbitMQ cluster name.</param>
+    /// <returns>A new <see cref="ManagedChannel"/>.</returns>
+    ManagedChannel CreateChannel(string name);
+
+    /// <summary>
+    /// Get the RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>, shared between all components.
+    /// </summary>
+    /// <param name="name">The RabbitMQ cluster name.</param>
+    /// <returns>The shared <see cref="ManagedChannel"/>.</returns>
+    ManagedChannel GetSharedChannel(string name);
+
+    /// <summary>
     /// <para>
-    ///     Consume a channel provider.
+    ///     Get the RabbitMQ managed channel, an object of type: <see cref="IModel"/>, from a pool.
+    /// </para>
+    /// <para>
+    ///     Once completed the publication, the method <see cref="ManagedChannel.Release()"/> is required
+    ///     to be called for others components can use the channel.
     /// </para>
     /// </summary>
     /// <param name="name">The RabbitMQ cluster name.</param>
-    /// <param name="consumer">The channel consumer.</param>
-    /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
-    IChannelConsumption Consume(string name, IChannelConsumer consumer);
-}
-
-public sealed class ManagedChannel
-{
-
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>Task for async processing with the <see cref="IModel"/>.</returns>
+    Task<ManagedChannel> GetPooledChannelAsync(string name, CancellationToken cancellationToken = default);
 }
