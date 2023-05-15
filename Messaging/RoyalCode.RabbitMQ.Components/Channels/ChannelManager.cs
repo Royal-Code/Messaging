@@ -1,14 +1,17 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
 /// <inheritdoc />
-public class ChannelManager : IChannelManager
+public sealed class ChannelManager : IChannelManager
 {
     private readonly ConnectionManager connectionManager;
-    private readonly Dictionary<string, ConnectionConsumer> connectionConsumers = new();
+    private readonly ConcurrentDictionary<string, ConnectionConsumer> connectionConsumers = new();
 
     /// <summary>
     /// Creates a new channel manager.
@@ -31,142 +34,77 @@ public class ChannelManager : IChannelManager
     private IOptionsMonitor<ChannelPoolOptions> OptionsMonitor { get; }
     
     /// <inheritdoc />
-    public IChannelConsumerStatus Consume(string name, IChannelConsumer consumer)
+    public ManagedChannel CreateChannel(string name)
     {
-        if (connectionConsumers.TryGetValue(name, out var connectionConsumer))
-            return connectionConsumer.AddConsumer(consumer);
-        
-        lock (connectionConsumers)
-        {
-            if (connectionConsumers.ContainsKey(name))
-            {
-                connectionConsumer = connectionConsumers[name];
-            }
-            else
-            {
-                connectionConsumer = new ConnectionConsumer(this, name, connectionManager);
-                connectionConsumers.Add(name, connectionConsumer);
-            }
-        }
-        
-        return connectionConsumer.AddConsumer(consumer);
+        var consumer = GetConnectionConsumer(name);
+        var options = OptionsMonitor.Get(name);
+
     }
 
-    private void RemoveConnectionConsumer(string name)
+    /// <inheritdoc />
+    public Task<ManagedChannel> GetPooledChannelAsync(string name, CancellationToken cancellationToken = default)
     {
-        lock (connectionConsumers)
-        {
-            if (connectionConsumers.ContainsKey(name))
-                connectionConsumers.Remove(name);
-        }
-    }
-}
-
-internal class ConnectionConsumer : IConnectionConsumer
-{
-    private readonly object locker = new();
-    private readonly ChannelManager channelManager;
-    private readonly string name;
-    private readonly LinkedList<ManagedConsumer> consumers = new();
-    private DefaultChannelProvider? channelProvider;
-
-    public ConnectionConsumer(ChannelManager channelManager, string name, ConnectionManager connectionManager)
-    {
-        this.channelManager = channelManager;
-        this.name = name;
-        connectionManager.Consume(name, this);
+        throw new NotImplementedException();
     }
 
-    public void Dispose()
+    /// <inheritdoc />
+    public ManagedChannel GetSharedChannel(string name)
     {
-        lock (locker)
-        {
-            channelManager.RemoveConnectionConsumer(name);
-            channelProvider?.Dispose();
-            consumers.Clear();
-        }
+        throw new NotImplementedException();
     }
 
-    public IChannelConsumerStatus AddConsumer(IChannelConsumer consumer)
+    /// <summary>
+    /// Get the connection consumer or create a new one for the given name of the RabbitMQ cluster.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ConnectionConsumer GetConnectionConsumer(string name)
     {
-        var managed = new ManagedConsumer(this, consumer);
-
-        lock (locker)
+        return connectionConsumers.GetOrAdd(name, (name, conectionManager) =>
         {
-            consumers.AddLast(managed);
-            if (channelProvider is not null)
-                managed.Consume(channelProvider);
+            var managedConnection = conectionManager.GetConnection(name);
+
+            return new ConnectionConsumer(managedConnection);
+        }, connectionManager);
+    }
+
+    private class ConnectionConsumer : IConnectionConsumer
+    {
+        private readonly IConnectionConsumerStatus consumerStatus;
+        private IConnection? connection;
+        private bool closed;
+
+        public ConnectionConsumer(ManagedConnection managedConnection)
+        {
+            consumerStatus = managedConnection.AddConsumer(this);
         }
 
-        return managed;
-    }
-
-    public void RemoveConsumer(ManagedConsumer managedConsumer)
-    {
-        lock (locker)
+        public void Closed()
         {
-            consumers.Remove(managedConsumer);
+            connection = null;
+            closed = true;
+        }
+
+        public void Consume(IConnection connection)
+        {
+            this.connection = connection;
+        }
+
+        public void Reloaded(IConnection connection, bool autorecovered)
+        {
+            this.connection = connection;
         }
     }
 
-    public void Consume(IConnectionProvider connectionProvider)
+    private class ManagedConsumer : IChannelConsumerStatus
     {
-        lock (locker)
-        {
-            channelProvider = new DefaultChannelProvider(
-                connectionProvider,
-                channelManager.OptionsMonitor.Get(name),
-                channelManager.LoggerFactory.CreateLogger<DefaultChannelProvider>());
+        public bool IsOpen { get; }
 
-            foreach (var consumer in consumers)
-            {
-                consumer.Consume(channelProvider);
-            }
-        }
-    }
-
-    public void Reload(bool autorecovered)
-    {
-        lock (locker)
+        public void Release()
         {
-            foreach (var consumer in consumers)
-            {
-                consumer.Reload(autorecovered);
-            }
-        }
-    }
-
-    public void Closed()
-    {
-        lock (locker)
-        {
-            foreach (var consumer in consumers)
-            {
-                consumer.Closed();
-            }
+            throw new NotImplementedException();
         }
     }
 }
 
-internal class ManagedConsumer : IChannelConsumerStatus
-{
-    private readonly ConnectionConsumer connectionConsumer;
-    private readonly IChannelConsumer consumer;
 
-    public ManagedConsumer(ConnectionConsumer connectionConsumer, IChannelConsumer consumer)
-    {
-        this.connectionConsumer = connectionConsumer;
-        this.consumer = consumer;
-    }
 
-    public void Consume(IChannelProvider channelProvider) => consumer.Consume(channelProvider);
-
-    public void Reload(bool autorecovered) => consumer.ConnectionRecovered(autorecovered);
-
-    public void Closed() => consumer.ConnectionClosed();
-
-    public void Dispose()
-    {
-        connectionConsumer.RemoveConsumer(this);
-    }
-}
