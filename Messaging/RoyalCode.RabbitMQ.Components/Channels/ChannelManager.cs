@@ -94,16 +94,6 @@ public sealed class ChannelManager : IChannelManager
             this.connection = connection;
         }
     }
-
-    private class ManagedConsumer : IChannelConsumerStatus
-    {
-        public bool IsOpen { get; }
-
-        public void Release()
-        {
-            throw new NotImplementedException();
-        }
-    }
 }
 
 

@@ -2,6 +2,7 @@
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -13,25 +14,35 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public abstract class ManagedChannel : IConnectionConsumer
 {
     private readonly IConnectionConsumerStatus consumerStatus;
-    private readonly ConcurrentBag<IChannelConsumer> consumers = new();
+    private readonly ConcurrentQueue<IChannelConsumer> consumers = new();
     private readonly ILogger logger;
+    private readonly EventHandler<ShutdownEventArgs> onModelShutdowEventHander;
 
     private IConnection? connection;
     private IModel? model;
 
     private bool modelCreated;
 
+    /// <summary>
+    /// Initialize a new instance of <see cref="ManagedChannel"/>.
+    /// </summary>
+    /// <param name="managedConnection">The managed connection.</param>
+    /// <param name="logger">The logger.</param>
     protected ManagedChannel(
         ManagedConnection managedConnection,
         ILogger logger)
     {
         consumerStatus = managedConnection.AddConsumer(this);
         this.logger = logger;
+        onModelShutdowEventHander = OnModelShutdown;
     }
 
     /// <summary>
     /// Check if the channel is open.
     /// </summary>
+#if NET5_0_OR_GREATER
+    [MemberNotNullWhen(true, nameof(Channel), nameof(model))]
+#endif
     public bool IsOpen => Channel?.IsOpen ?? false;
 
     /// <summary>
@@ -51,15 +62,32 @@ public abstract class ManagedChannel : IConnectionConsumer
     /// </summary>
     /// <param name="consumer">The channel consumer.</param>
     /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
-    IChannelConsumerStatus Consume(IChannelConsumer consumer)
+    public IChannelConsumerStatus Consume(IChannelConsumer consumer)
     {
-        throw new NotImplementedException();
+        consumers.Enqueue(consumer);
+
+        if (IsOpen)
+        {
+            try
+            {
+                consumer.Consume(model);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to consume the channel.");
+            }
+        }
+
+        return new ManagedConsumer(this, consumer);
     }
 
-    void Release()
+    internal void Release(IChannelConsumer consumer)
     {
-        throw new NotImplementedException();
+        // todo: nada concurrent pode incluir e excluir
+        //consumers.
     }
+
+    #region channel management
 
     private void CreateModel()
     {
@@ -73,9 +101,10 @@ public abstract class ManagedChannel : IConnectionConsumer
         try
         {
             model = connection!.CreateModel();
+            InitModel(model);
             ModelCreated(model);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             logger.LogError(ex, "Failed to create a channel.");
             RetryCreateChannel();
@@ -116,23 +145,25 @@ public abstract class ManagedChannel : IConnectionConsumer
     {
         try
         {
+            TerminateModel();
             model = connection!.CreateModel();
+            InitModel(model);
             ModelReCreated(model, autorecovered);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to re-create a channel.");
-            RetryReCreateChannel();
+            RetryReCreateChannel(autorecovered);
         }
     }
 
-    private void RetryReCreateChannel()
+    private void RetryReCreateChannel(bool autorecovered)
     {
         Task.Run(async () =>
         {
             await Task.Delay(1000);
             logger.LogInformation("Retrying to re-create a channel.");
-            CreateModel();
+            ReCreateModel(autorecovered);
         });
     }
 
@@ -154,6 +185,46 @@ public abstract class ManagedChannel : IConnectionConsumer
         }
     }
 
+    private void InitModel(IModel model)
+    {
+        model.ModelShutdown += onModelShutdowEventHander;
+    }
+
+    private void TerminateModel()
+    {
+        if (model is null)
+            return;
+
+        model.ModelShutdown -= onModelShutdowEventHander;
+        model.Dispose();
+        model = null;
+    }
+
+    private void OnModelShutdown(object? sender, ShutdownEventArgs e)
+    {
+        // if the connection was closed, then is not necessary to notify the consumers, either re-create the model.
+        if (!modelCreated || !consumerStatus.IsConnected)
+            return;
+
+        logger.LogInformation("Channel shutdown. Notifying consumers.");
+
+        foreach (var consumer in consumers)
+        {
+            try
+            {
+                consumer.ChannelClosed();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed notifying (shutdown) for the consumer: {consumer).", consumer);
+            }
+        }
+
+        RetryReCreateChannel(false);
+    }
+
+    #endregion
+
     #region IConnectionConsumer implementation
 
 
@@ -161,8 +232,8 @@ public abstract class ManagedChannel : IConnectionConsumer
     {
         logger.LogInformation("Connection closed. Notifying consumers.");
 
+        TerminateModel();
         connection = null;
-        model = null;
         modelCreated = false;
 
         foreach (var consumer in consumers)
@@ -194,4 +265,23 @@ public abstract class ManagedChannel : IConnectionConsumer
     }
 
     #endregion
+
+    private class ManagedConsumer : IChannelConsumerStatus
+    {
+        private readonly ManagedChannel managedChannel;
+        private readonly IChannelConsumer consumer;
+
+        public ManagedConsumer(ManagedChannel managedChannel, IChannelConsumer consumer)
+        {
+            this.managedChannel = managedChannel;
+            this.consumer = consumer;
+        }
+
+        public bool IsOpen => managedChannel.IsOpen;
+
+        public void Release()
+        {
+            managedChannel.Release(consumer);
+        }
+    }
 }

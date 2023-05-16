@@ -79,7 +79,7 @@ public sealed class ConnectionManager
     /// <param name="name">The name of the RabbitMQ Cluster.</param>
     /// <param name="consumer">The connection consumer.</param>
     /// <returns>True if was connected, false if has a connection error.</returns>
-    public IConsumerStatus Consume(string name, IConnectionConsumer consumer)
+    public IConnectionConsumerStatus Consume(string name, IConnectionConsumer consumer)
     {
         return GetConnection(name).AddConsumer(consumer);
     }
