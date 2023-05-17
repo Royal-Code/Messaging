@@ -1,10 +1,53 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
+
+/// <inheritdoc />
+public sealed class SharedManagedChannel : ManagedChannel
+{
+    public SharedManagedChannel(ManagedConnection managedConnection, ILogger logger)
+        : base(managedConnection, logger)
+    { }
+
+    /// <inheritdoc />
+    public override void ReleaseChannel()
+    {
+        logger.LogDebug("Release the shared channel called, nothing to do.");
+    }
+}
+
+/// <inheritdoc />
+public sealed class ExclusiveManagedChannel : ManagedChannel
+{
+    public ExclusiveManagedChannel(ManagedConnection managedConnection, ILogger logger) 
+        : base(managedConnection, logger)
+    { }
+
+    /// <inheritdoc />
+    public override void ReleaseChannel()
+    {
+        logger.LogDebug("Release the exclusive channel called, close the channel.");
+        try
+        {
+            TerminateModel(true);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to terminate the channel.");
+        }
+    }
+}
+
+public sealed class PooledManagedChannel : ManagedChannel
+{
+    public PooledManagedChannel(ManagedConnection managedConnection, ILogger logger, ObjectPool<PooledManagedChannel> pool)
+        : base(managedConnection, logger)
+    {
+    }
+}
 
 /// <summary>
 /// <para>
@@ -14,14 +57,14 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public abstract class ManagedChannel : IConnectionConsumer
 {
     private readonly IConnectionConsumerStatus consumerStatus;
-    private readonly ConcurrentQueue<IChannelConsumer> consumers = new();
-    private readonly ILogger logger;
+    private readonly List<IChannelConsumer> consumers = new();
     private readonly EventHandler<ShutdownEventArgs> onModelShutdowEventHander;
-
     private IConnection? connection;
     private IModel? model;
 
     private bool modelCreated;
+
+    protected readonly ILogger logger;
 
     /// <summary>
     /// Initialize a new instance of <see cref="ManagedChannel"/>.
@@ -64,7 +107,10 @@ public abstract class ManagedChannel : IConnectionConsumer
     /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
     public IChannelConsumerStatus Consume(IChannelConsumer consumer)
     {
-        consumers.Enqueue(consumer);
+        lock (consumers)
+        {
+            consumers.Add(consumer);
+        }
 
         if (IsOpen)
         {
@@ -81,10 +127,23 @@ public abstract class ManagedChannel : IConnectionConsumer
         return new ManagedConsumer(this, consumer);
     }
 
+    /// <summary>
+    /// <para>
+    ///     Release the RabbitMQ channel.
+    /// </para> 
+    /// <para>
+    ///     The behavior of this method depends on the implementation of the channel strategy.
+    ///     When the channel is released, the channel strategy will decide whether to close the channel or not.
+    /// </para>
+    /// </summary>
+    public abstract void ReleaseChannel();
+
     internal void Release(IChannelConsumer consumer)
     {
-        // todo: nada concurrent pode incluir e excluir
-        //consumers.
+        lock (consumers)
+        {
+            consumers.Remove(consumer);
+        }
     }
 
     #region channel management
@@ -127,16 +186,19 @@ public abstract class ManagedChannel : IConnectionConsumer
 
         logger.LogDebug("Channel created. Notifying consumers.");
 
-        foreach (var consumer in consumers)
+        lock (consumers)
         {
-            try
+            foreach (var consumer in consumers)
             {
-                logger.LogDebug("Notifying that the model has been created for the consumer: {consumer}.", consumer);
-                consumer.Consume(model);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed notifying (model created) for the consumer: {consumer).", consumer);
+                try
+                {
+                    logger.LogDebug("Notifying that the model has been created for the consumer: {consumer}.", consumer);
+                    consumer.Consume(model);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed notifying (model created) for the consumer: {consumer).", consumer);
+                }
             }
         }
     }
@@ -171,16 +233,19 @@ public abstract class ManagedChannel : IConnectionConsumer
     {
         logger.LogInformation("Channel re-created. Notifying consumers.");
 
-        foreach (var consumer in consumers)
+        lock (consumers)
         {
-            try
+            foreach (var consumer in consumers)
             {
-                logger.LogDebug("Notifying that the model has been re-created for the consumer: {consumer}.", consumer);
-                consumer.ConnectionRecovered(model, autorecovered);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed notifying (model re-created) for the consumer: {consumer).", consumer);
+                try
+                {
+                    logger.LogDebug("Notifying that the model has been re-created for the consumer: {consumer}.", consumer);
+                    consumer.ConnectionRecovered(model, autorecovered);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed notifying (model re-created) for the consumer: {consumer).", consumer);
+                }
             }
         }
     }
@@ -190,7 +255,10 @@ public abstract class ManagedChannel : IConnectionConsumer
         model.ModelShutdown += onModelShutdowEventHander;
     }
 
-    private void TerminateModel()
+    /// <summary>
+    /// Finaliza o canal.
+    /// </summary>
+    protected void TerminateModel(bool cleanConsumers = false)
     {
         if (model is null)
             return;
@@ -198,6 +266,14 @@ public abstract class ManagedChannel : IConnectionConsumer
         model.ModelShutdown -= onModelShutdowEventHander;
         model.Dispose();
         model = null;
+
+        if (cleanConsumers)
+        {
+            lock (consumers)
+            {
+                consumers.Clear();
+            }
+        }
     }
 
     private void OnModelShutdown(object? sender, ShutdownEventArgs e)
@@ -208,15 +284,18 @@ public abstract class ManagedChannel : IConnectionConsumer
 
         logger.LogInformation("Channel shutdown. Notifying consumers.");
 
-        foreach (var consumer in consumers)
+        lock (consumers)
         {
-            try
+            foreach (var consumer in consumers)
             {
-                consumer.ChannelClosed();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed notifying (shutdown) for the consumer: {consumer).", consumer);
+                try
+                {
+                    consumer.ChannelClosed();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed notifying (shutdown) for the consumer: {consumer).", consumer);
+                }
             }
         }
 
@@ -236,15 +315,18 @@ public abstract class ManagedChannel : IConnectionConsumer
         connection = null;
         modelCreated = false;
 
-        foreach (var consumer in consumers)
+        lock (consumers)
         {
-            try
+            foreach (var consumer in consumers)
             {
-                consumer.ConnectionClosed();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed notifying (closed) for the consumer: {consumer).", consumer);
+                try
+                {
+                    consumer.ConnectionClosed();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed notifying (closed) for the consumer: {consumer).", consumer);
+                }
             }
         }
     }

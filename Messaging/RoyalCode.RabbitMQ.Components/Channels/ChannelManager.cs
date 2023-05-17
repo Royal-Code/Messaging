@@ -1,9 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -11,7 +8,11 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public sealed class ChannelManager : IChannelManager
 {
     private readonly ConnectionManager connectionManager;
-    private readonly ConcurrentDictionary<string, ConnectionConsumer> connectionConsumers = new();
+    private readonly ILoggerFactory loggerFactory;
+    private readonly IOptionsMonitor<ChannelPoolOptions> optionsMonitor;
+    private readonly ILogger logger;
+
+    private ManagedChannel? sharedChannel;
 
     /// <summary>
     /// Creates a new channel manager.
@@ -25,20 +26,23 @@ public sealed class ChannelManager : IChannelManager
         IOptionsMonitor<ChannelPoolOptions> optionsMonitor)
     {
         this.connectionManager = connectionManager;
-        LoggerFactory = loggerFactory;
-        OptionsMonitor = optionsMonitor;
+        this.loggerFactory = loggerFactory;
+        this.optionsMonitor = optionsMonitor;
+        logger = loggerFactory.CreateLogger<ChannelManager>();
     }
-    
-    private ILoggerFactory LoggerFactory { get; }
-    
-    private IOptionsMonitor<ChannelPoolOptions> OptionsMonitor { get; }
     
     /// <inheritdoc />
     public ManagedChannel CreateChannel(string name)
     {
-        var consumer = GetConnectionConsumer(name);
-        var options = OptionsMonitor.Get(name);
+        logger.LogInformation("Creating channel manager for the RabbitMQ cluster {name}", name);
 
+        var managedConnection = connectionManager.GetConnection(name);
+
+        var managedChannel = new ExclusiveManagedChannel(
+            managedConnection,
+            loggerFactory.CreateLogger<ExclusiveManagedChannel>());
+
+        return managedChannel;
     }
 
     /// <inheritdoc />
@@ -48,50 +52,23 @@ public sealed class ChannelManager : IChannelManager
     }
 
     /// <inheritdoc />
-    public ManagedChannel GetSharedChannel(string name)
+    public ManagedChannel GetSharedChannel(string name) => sharedChannel ??= SafeCreateSharedChannel(name);
+
+    private ManagedChannel SafeCreateSharedChannel(string name)
     {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// Get the connection consumer or create a new one for the given name of the RabbitMQ cluster.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ConnectionConsumer GetConnectionConsumer(string name)
-    {
-        return connectionConsumers.GetOrAdd(name, (name, conectionManager) =>
+        lock(logger)
         {
-            var managedConnection = conectionManager.GetConnection(name);
+            if (sharedChannel is not null)
+                return sharedChannel;
+            
+            logger.LogInformation("Creating shared channel manager for the RabbitMQ cluster {name}", name);
+            
+            var managedConnection = connectionManager.GetConnection(name);
+            var managedChannel = new SharedManagedChannel(
+                managedConnection,
+                loggerFactory.CreateLogger<SharedManagedChannel>());
 
-            return new ConnectionConsumer(managedConnection);
-        }, connectionManager);
-    }
-
-    private class ConnectionConsumer : IConnectionConsumer
-    {
-        private readonly IConnectionConsumerStatus consumerStatus;
-        private IConnection? connection;
-        private bool closed;
-
-        public ConnectionConsumer(ManagedConnection managedConnection)
-        {
-            consumerStatus = managedConnection.AddConsumer(this);
-        }
-
-        public void Closed()
-        {
-            connection = null;
-            closed = true;
-        }
-
-        public void Consume(IConnection connection)
-        {
-            this.connection = connection;
-        }
-
-        public void Reloaded(IConnection connection, bool autorecovered)
-        {
-            this.connection = connection;
+            return managedChannel;
         }
     }
 }
