@@ -47,7 +47,7 @@ internal sealed class DefaultChannelProvider : IChannelProvider, IDisposable
         
         logger.LogInformation("Pooled channel received");
         
-        return pooled.Instace;
+        return pooled.Instance;
     }
 
     /// <inheritdoc />

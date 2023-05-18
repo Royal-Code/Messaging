@@ -18,7 +18,7 @@ public class T01_AsyncObjectPoolTests
         var pooled = await pool.GetAsync();
         
         Assert.NotNull(pooled);
-        Assert.NotNull(pooled.Instace);
+        Assert.NotNull(pooled.Instance);
         Assert.Equal(1, pool.CountObjectsInUse());
         
         pooled.Dispose();
@@ -35,14 +35,14 @@ public class T01_AsyncObjectPoolTests
         var pooled1 = await pool.GetAsync();
         
         Assert.NotNull(pooled1);
-        Assert.NotNull(pooled1.Instace);
-        var first = pooled1.Instace;
+        Assert.NotNull(pooled1.Instance);
+        var first = pooled1.Instance;
         pooled1.Dispose();
         
         var pooled2 = await pool.GetAsync();
         Assert.NotNull(pooled2);
-        Assert.NotNull(pooled2.Instace);
-        var second = pooled2.Instace;
+        Assert.NotNull(pooled2.Instance);
+        var second = pooled2.Instance;
         
         Assert.Same(first, second);
         Assert.NotSame(pooled1, pooled2);
@@ -79,7 +79,7 @@ public class T01_AsyncObjectPoolTests
         var pool = new DefaultAsyncObjectPool<ObjectPoolTestType>(policy);
         
         var pooled1 = await pool.GetAsync();
-        var first = pooled1.Instace;
+        var first = pooled1.Instance;
         _ = Task.Run(async () =>
         {
             await Task.Delay(2000);
@@ -91,7 +91,7 @@ public class T01_AsyncObjectPoolTests
         Assert.Equal(1, pool.CountObjectsInUse());
 
         var pooled2 = await pooled2Task;
-        var second = pooled2.Instace;
+        var second = pooled2.Instance;
         
         Assert.Equal(1, pool.CountObjectsInUse());
         Assert.Same(first, second);
@@ -109,7 +109,7 @@ public class T01_AsyncObjectPoolTests
         var pool = new DefaultAsyncObjectPool<ObjectPoolTestType>(policy);
         var pooled = await pool.GetAsync();
 
-        var instance = pooled.Instace;
+        var instance = pooled.Instance;
         Assert.True(instance.Initialized);
         Assert.False(instance.Returned);
         
@@ -128,7 +128,7 @@ public class T01_AsyncObjectPoolTests
         var pooled = await pool.GetAsync();
         pooled.Dispose();
 
-        Assert.Throws<InvalidOperationException>(() => pooled.Instace);
+        Assert.Throws<InvalidOperationException>(() => pooled.Instance);
     }
 }
 

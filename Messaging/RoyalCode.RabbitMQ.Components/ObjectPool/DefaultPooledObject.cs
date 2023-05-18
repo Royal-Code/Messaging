@@ -28,7 +28,7 @@ public sealed class DefaultPooledObject<T> : IPooledObject<T>
     }
 
     /// <inheritdoc />
-    public T Instace
+    public T Instance
     {
         get
         {

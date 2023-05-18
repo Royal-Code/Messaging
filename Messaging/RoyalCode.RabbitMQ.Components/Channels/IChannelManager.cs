@@ -13,30 +13,41 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public interface IChannelManager
 {
     /// <summary>
-    /// Creates a new RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>.
+    /// <para>
+    ///     Creates a new RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>.
+    /// </para>
+    /// <para>
+    ///     This channel is recommended to use for both, publishers and consumers.
+    /// </para>
+    /// <para>
+    ///     Once completed the publication, the method <see cref="ManagedChannel.ReleaseChannel()"/> is required
+    ///     to close the channel.
+    /// </para>
     /// </summary>
-    /// <param name="name">The RabbitMQ cluster name.</param>
     /// <returns>A new <see cref="ManagedChannel"/>.</returns>
-    ManagedChannel CreateChannel(string name);
+    ManagedChannel CreateChannel();
 
     /// <summary>
-    /// Get the RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>, shared between all components.
+    /// <para>
+    ///     Get the RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>, 
+    ///     shared between all components.
+    /// </para>
+    /// <para>
+    ///     This channel is recommended to use for consumers, and the release is not required.
+    /// </para>
     /// </summary>
-    /// <param name="name">The RabbitMQ cluster name.</param>
     /// <returns>The shared <see cref="ManagedChannel"/>.</returns>
-    ManagedChannel GetSharedChannel(string name);
+    ManagedChannel GetSharedChannel();
 
     /// <summary>
     /// <para>
     ///     Get the RabbitMQ managed channel, an object of type: <see cref="IModel"/>, from a pool.
     /// </para>
     /// <para>
-    ///     Once completed the publication, the method <see cref="ManagedChannel.Release()"/> is required
+    ///     Once completed the publication, the method <see cref="ManagedChannel.ReleaseChannel()"/> is required
     ///     to be called for others components can use the channel.
     /// </para>
     /// </summary>
-    /// <param name="name">The RabbitMQ cluster name.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>Task for async processing with the <see cref="IModel"/>.</returns>
-    Task<ManagedChannel> GetPooledChannelAsync(string name, CancellationToken cancellationToken = default);
+    ManagedChannel GetPooledChannel();
 }

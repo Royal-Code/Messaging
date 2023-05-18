@@ -72,7 +72,7 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
         DefaultPooledObject<T>? pooled;
         lock (locker)
         {
-             pooled = inUse.FirstOrDefault(p => p.Instace == instance);
+             pooled = inUse.FirstOrDefault(p => p.Instance == instance);
         }
 
         if (pooled is null)
@@ -85,10 +85,10 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
     {
         lock (locker)
         {
-            policy.Return(pooled.Instace);
+            policy.Return(pooled.Instance);
             inUse.Remove(pooled);
             
-            var pooledFree = new DefaultPooledObject<T>(this, pooled.Instace);
+            var pooledFree = new DefaultPooledObject<T>(this, pooled.Instance);
             
             checkScheduled:
             if (scheduled.TryDequeue(out var scheduledItem))
@@ -125,7 +125,7 @@ public class DefaultAsyncObjectPool<T> : IAsyncObjectPool<T>
     {
         pooled.SetReadyForUse();
         inUse.AddLast(pooled);
-        policy.Initialize(pooled.Instace);
+        policy.Initialize(pooled.Instance);
     }
 
     private DefaultPooledObject<T> Create()

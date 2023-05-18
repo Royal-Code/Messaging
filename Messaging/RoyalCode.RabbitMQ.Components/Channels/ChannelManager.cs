@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RoyalCode.RabbitMQ.Components.Connections;
+using RoyalCode.RabbitMQ.Components.ObjectPool;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
@@ -13,6 +14,7 @@ public sealed class ChannelManager : IChannelManager
     private readonly ILogger logger;
 
     private ManagedChannel? sharedChannel;
+    private IAsyncObjectPool<PooledManagedChannel> pool;
 
     /// <summary>
     /// Creates a new channel manager.
@@ -48,6 +50,8 @@ public sealed class ChannelManager : IChannelManager
     /// <inheritdoc />
     public Task<ManagedChannel> GetPooledChannelAsync(string name, CancellationToken cancellationToken = default)
     {
+
+
         throw new NotImplementedException();
     }
 

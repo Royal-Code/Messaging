@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
 using System.Diagnostics.CodeAnalysis;
@@ -41,11 +42,26 @@ public sealed class ExclusiveManagedChannel : ManagedChannel
     }
 }
 
+/// <inheritdoc />
 public sealed class PooledManagedChannel : ManagedChannel
 {
-    public PooledManagedChannel(ManagedConnection managedConnection, ILogger logger, ObjectPool<PooledManagedChannel> pool)
+    private readonly ObjectPool<PooledManagedChannel> pool;
+
+    public PooledManagedChannel(
+        ManagedConnection managedConnection,
+        ILogger logger,
+        ObjectPool<PooledManagedChannel> pool)
         : base(managedConnection, logger)
     {
+        this.pool = pool;
+    }
+
+    /// <inheritdoc />
+    public override void ReleaseChannel()
+    {
+        logger.LogDebug("Releasing the pooled channel");
+
+        pool.Return(this);
     }
 }
 
