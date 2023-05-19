@@ -13,6 +13,11 @@ namespace RoyalCode.RabbitMQ.Components.Channels;
 public interface IChannelManager
 {
     /// <summary>
+    /// The name of the RabbitMQ cluster.
+    /// </summary>
+    public string ClusterName { get; }
+
+    /// <summary>
     /// <para>
     ///     Creates a new RabbitMQ managed channel, an object of type: <see cref="ManagedChannel"/>.
     /// </para>
@@ -20,7 +25,7 @@ public interface IChannelManager
     ///     This channel is recommended to use for both, publishers and consumers.
     /// </para>
     /// <para>
-    ///     Once completed the publication, the method <see cref="ManagedChannel.ReleaseChannel()"/> is required
+    ///     Once completed the publication, the method <see cref="IDisposable.Dispose()"/> is required
     ///     to close the channel.
     /// </para>
     /// </summary>
@@ -44,7 +49,7 @@ public interface IChannelManager
     ///     Get the RabbitMQ managed channel, an object of type: <see cref="IModel"/>, from a pool.
     /// </para>
     /// <para>
-    ///     Once completed the publication, the method <see cref="ManagedChannel.ReleaseChannel()"/> is required
+    ///     Once completed the publication, the method <see cref="IDisposable.Dispose()"/> is required
     ///     to be called for others components can use the channel.
     /// </para>
     /// </summary>

@@ -1,76 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ObjectPool;
 using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Connections;
 using System.Diagnostics.CodeAnalysis;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
-/// <inheritdoc />
-public sealed class SharedManagedChannel : ManagedChannel
-{
-    public SharedManagedChannel(ManagedConnection managedConnection, ILogger logger)
-        : base(managedConnection, logger)
-    { }
-
-    /// <inheritdoc />
-    public override void ReleaseChannel()
-    {
-        logger.LogDebug("Release the shared channel called, nothing to do.");
-    }
-}
-
-/// <inheritdoc />
-public sealed class ExclusiveManagedChannel : ManagedChannel
-{
-    public ExclusiveManagedChannel(ManagedConnection managedConnection, ILogger logger) 
-        : base(managedConnection, logger)
-    { }
-
-    /// <inheritdoc />
-    public override void ReleaseChannel()
-    {
-        logger.LogDebug("Release the exclusive channel called, close the channel.");
-        try
-        {
-            TerminateModel(true);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to terminate the channel.");
-        }
-    }
-}
-
-/// <inheritdoc />
-public sealed class PooledManagedChannel : ManagedChannel
-{
-    private readonly ObjectPool<PooledManagedChannel> pool;
-
-    public PooledManagedChannel(
-        ManagedConnection managedConnection,
-        ILogger logger,
-        ObjectPool<PooledManagedChannel> pool)
-        : base(managedConnection, logger)
-    {
-        this.pool = pool;
-    }
-
-    /// <inheritdoc />
-    public override void ReleaseChannel()
-    {
-        logger.LogDebug("Releasing the pooled channel");
-
-        pool.Return(this);
-    }
-}
-
 /// <summary>
 /// <para>
 ///     Manage a channel (<see cref="IModel"/>) of the RabbitMQ.
 /// </para>
 /// </summary>
-public abstract class ManagedChannel : IConnectionConsumer
+public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 {
     private readonly IConnectionConsumerStatus consumerStatus;
     private readonly List<IChannelConsumer> consumers = new();
@@ -79,7 +19,11 @@ public abstract class ManagedChannel : IConnectionConsumer
     private IModel? model;
 
     private bool modelCreated;
+    private bool disposed;
 
+    /// <summary>
+    /// The logger.
+    /// </summary>
     protected readonly ILogger logger;
 
     /// <summary>
@@ -152,7 +96,8 @@ public abstract class ManagedChannel : IConnectionConsumer
     ///     When the channel is released, the channel strategy will decide whether to close the channel or not.
     /// </para>
     /// </summary>
-    public abstract void ReleaseChannel();
+    /// <returns>True if the channel is released, otherwise false.</returns>
+    protected abstract bool ReleaseChannel();
 
     internal void Release(IChannelConsumer consumer)
     {
@@ -381,5 +326,34 @@ public abstract class ManagedChannel : IConnectionConsumer
         {
             managedChannel.Release(consumer);
         }
+    }
+
+    /// <summary>
+    /// Execute the dispose.
+    /// </summary>
+    /// <param name="disposing">if are disposing.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed)
+            return;
+
+        var continueDispose = ReleaseChannel();
+        if(!continueDispose)
+            return;
+
+        disposed = true;
+
+        TerminateModel(true);
+        connection = null;
+        modelCreated = false;
+    }
+
+    /// <summary>
+    /// Finalize the channel.
+    /// </summary>
+    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Not my Pattern")]
+    public void Dispose()
+    {
+        Dispose(disposing: true);
     }
 }

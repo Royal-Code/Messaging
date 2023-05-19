@@ -1,44 +1,48 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RoyalCode.RabbitMQ.Components.Connections;
-using RoyalCode.RabbitMQ.Components.ObjectPool;
 
 namespace RoyalCode.RabbitMQ.Components.Channels;
 
 /// <inheritdoc />
-public sealed class ChannelManager : IChannelManager
+public sealed class ChannelManager : IChannelManager, IDisposable
 {
-    private readonly ConnectionManager connectionManager;
+    private readonly ManagedConnection managedConnection;
     private readonly ILoggerFactory loggerFactory;
     private readonly IOptionsMonitor<ChannelPoolOptions> optionsMonitor;
     private readonly ILogger logger;
 
-    private ManagedChannel? sharedChannel;
-    private IAsyncObjectPool<PooledManagedChannel> pool;
+    private SharedManagedChannel? sharedChannel;
+    private bool disposed;
 
     /// <summary>
     /// Creates a new channel manager.
     /// </summary>
-    /// <param name="connectionManager">The connection manager.</param>
+    /// <param name="clusterName">The name of the RabbitMQ cluster.</param>
+    /// <param name="managedConnection">A managed connection.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     /// <param name="optionsMonitor">Options for pooled channels.</param>
     public ChannelManager(
-        ConnectionManager connectionManager,
+        string clusterName,
+        ManagedConnection managedConnection,
         ILoggerFactory loggerFactory,
         IOptionsMonitor<ChannelPoolOptions> optionsMonitor)
     {
-        this.connectionManager = connectionManager;
+        ClusterName = clusterName;
+
+        this.managedConnection = managedConnection;
         this.loggerFactory = loggerFactory;
         this.optionsMonitor = optionsMonitor;
         logger = loggerFactory.CreateLogger<ChannelManager>();
     }
-    
-    /// <inheritdoc />
-    public ManagedChannel CreateChannel(string name)
-    {
-        logger.LogInformation("Creating channel manager for the RabbitMQ cluster {name}", name);
 
-        var managedConnection = connectionManager.GetConnection(name);
+    /// <inheritdoc />
+    public string ClusterName { get; }
+
+    /// <inheritdoc />
+    public ManagedChannel CreateChannel()
+    {
+        logger.LogInformation("Creating channel manager for the RabbitMQ cluster {ClusterName}", ClusterName);
 
         var managedChannel = new ExclusiveManagedChannel(
             managedConnection,
@@ -48,7 +52,7 @@ public sealed class ChannelManager : IChannelManager
     }
 
     /// <inheritdoc />
-    public Task<ManagedChannel> GetPooledChannelAsync(string name, CancellationToken cancellationToken = default)
+    public ManagedChannel GetPooledChannel()
     {
 
 
@@ -56,24 +60,37 @@ public sealed class ChannelManager : IChannelManager
     }
 
     /// <inheritdoc />
-    public ManagedChannel GetSharedChannel(string name) => sharedChannel ??= SafeCreateSharedChannel(name);
+    public ManagedChannel GetSharedChannel() => sharedChannel ??= SafeCreateSharedChannel();
 
-    private ManagedChannel SafeCreateSharedChannel(string name)
+    private SharedManagedChannel SafeCreateSharedChannel()
     {
         lock(logger)
         {
             if (sharedChannel is not null)
                 return sharedChannel;
             
-            logger.LogInformation("Creating shared channel manager for the RabbitMQ cluster {name}", name);
+            logger.LogInformation("Creating shared channel manager for the RabbitMQ cluster {ClusterName}", ClusterName);
             
-            var managedConnection = connectionManager.GetConnection(name);
             var managedChannel = new SharedManagedChannel(
                 managedConnection,
                 loggerFactory.CreateLogger<SharedManagedChannel>());
 
             return managedChannel;
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (disposed)
+            return;
+
+        disposed = true;
+
+        sharedChannel?.Terminate();
+        sharedChannel = null;
+
+        throw new NotImplementedException();
     }
 }
 
