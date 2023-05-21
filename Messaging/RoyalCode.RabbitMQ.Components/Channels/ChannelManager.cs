@@ -93,6 +93,9 @@ public sealed class ChannelManager : IChannelManager, IDisposable
         sharedChannel?.Terminate();
         sharedChannel = null;
 
+        channelPool?.Dispose();
+
+
         throw new NotImplementedException();
     }
 }
