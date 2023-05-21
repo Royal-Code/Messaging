@@ -14,21 +14,26 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 ///     <see cref="RabbitMqComponentsServiceCollectionExtensions.ConfigureRabbitMQConnection(IServiceCollection, string, Action{ConnectionPoolOptions})"/>
 /// </para>
 /// </summary>
-public sealed class ConnectionManager
+public sealed class ConnectionManager : IDisposable
 {
     private readonly ConnectionPoolFactory connectionPoolFactory;
     private readonly ILoggerFactory loggerFactory;
-    private readonly Dictionary<string, ManagedConnection> pools = new();
+    private readonly Dictionary<string, ManagedConnection> connections = new();
+
+    private readonly ILogger logger;
+    private bool disposing;
 
     /// <summary>
     /// Creates a new Connection Manager.
     /// </summary>
-    /// <param name="connectionPoolFactory">The factory to create the connections pools.</param>
+    /// <param name="connectionPoolFactory">The factory to create the connections connections.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     public ConnectionManager(ConnectionPoolFactory connectionPoolFactory, ILoggerFactory loggerFactory)
     {
         this.connectionPoolFactory = connectionPoolFactory;
         this.loggerFactory = loggerFactory;
+
+        logger = loggerFactory.CreateLogger<ConnectionManager>();
     }
 
     /// <summary>
@@ -43,21 +48,23 @@ public sealed class ConnectionManager
     /// <returns>An instance of <see cref="ManagedConnection"/>.</returns>
     public ManagedConnection GetConnection(string name)
     {
-        if (pools.TryGetValue(name, out var managed))
+        if (connections.TryGetValue(name, out var managed))
             return managed;
 
-        lock (pools)
+        lock (connections)
         {
-            if (pools.ContainsKey(name))
+            if (connections.ContainsKey(name))
             {
-                managed = pools[name];
+                managed = connections[name];
             }
             else
             {
+                this.logger.LogInformation("Creating a new managed connection for the RabbitMQ cluster '{name}'", name);
+
                 var pool = connectionPoolFactory.Create(name);
-                var logger = loggerFactory.CreateLogger($"{GetType().FullName}.{nameof(ManagedConnection)}.{name}");
+                var logger = loggerFactory.CreateLogger($"{typeof(ManagedConnection).FullName}.{name}");
                 managed = new ManagedConnection(name, pool, logger);
-                pools[name] = managed;
+                connections[name] = managed;
             }
         }
 
@@ -81,6 +88,26 @@ public sealed class ConnectionManager
     /// <returns>True if was connected, false if has a connection error.</returns>
     public IConnectionConsumerStatus Consume(string name, IConnectionConsumer consumer)
     {
+        logger.LogDebug("Consuming a connection for the RabbitMQ cluster '{name}'", name);
+
         return GetConnection(name).AddConsumer(consumer);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (disposing)
+            return;
+
+        disposing = true;
+
+        logger.LogDebug("Disposing all managed connections");
+
+        foreach (var managed in connections.Values)
+        {
+            managed.Disposing();
+        }
+
+        connections.Clear();
     }
 }

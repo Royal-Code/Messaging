@@ -17,6 +17,7 @@ public sealed class ManagedConnection
 
     private IConnection? currentConnection;
     private bool error;
+    private bool disposing;
 
     /// <summary>
     /// Creates a new managed connection for a RabbitMQ cluster with a connection pool.
@@ -129,6 +130,12 @@ public sealed class ManagedConnection
 
             logger.LogInformation("Creating a RabbitMQ connection for cluster name {Name}", Name);
 
+            if (disposing)
+            {
+                connection = null;
+                return false;
+            }
+
             try
             {
                 currentConnection = connectionPool.GetNextConnetion();
@@ -160,11 +167,17 @@ public sealed class ManagedConnection
 
     private void Reconnect()
     {
+        if (disposing)
+            return;
+
         connectionPool.TryReconnect(Reconnected);
     }
 
     private void Reconnected(IConnection connection, bool autorecovered)
     {
+        if (disposing)
+            return;
+
         currentConnection = connection;
         error = false;
         Connected();
@@ -203,12 +216,38 @@ public sealed class ManagedConnection
         }
     }
 
-    private class ManagedConsumer : IConnectionConsumerStatus
+    internal void Disposing()
+    {
+        if (disposing)
+            return;
+
+        disposing = true;
+
+        var consumers = this.consumers.ToArray();
+        foreach (var consumer in consumers)
+        {
+            consumer.Disposing();
+        }
+
+        if (currentConnection is not null)
+        {
+            currentConnection.ConnectionShutdown -= shutdownEventHandler;
+            currentConnection.Dispose();
+            currentConnection = null;
+        }
+
+        connectionPool.Dispose();
+        
+    }
+
+    private sealed class ManagedConsumer : IConnectionConsumerStatus
     {
         private readonly ManagedConnection managed;
         private readonly IConnectionConsumer consumer;
         private IConnection? connection;
         private bool first = true;
+
+        private bool disposed;
 
         internal ManagedConsumer(ManagedConnection managed, IConnectionConsumer consumer)
         {
@@ -230,6 +269,11 @@ public sealed class ManagedConnection
             }
         }
 
+        internal void Disposing()
+        {
+            consumer.Disposing();
+        }
+
         /// <summary>
         /// Check if the consumer is connected to the RabbitMQ node.
         /// </summary>
@@ -238,8 +282,13 @@ public sealed class ManagedConnection
         /// <summary>
         /// Release the consumer.
         /// </summary>
-        public void ReleaseConsumer()
+        public void Dispose()
         {
+            if (disposed)
+                return;
+
+            disposed = true;
+
             managed.ReleaseConsumer(this);
             connection = null;
         }

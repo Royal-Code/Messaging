@@ -47,11 +47,11 @@ public interface IConnectionConsumer
 
     /// <summary>
     /// <para>
-    ///     Informe all consumers that the connection was closed and the <see cref="ManagedConnection"/> disposed.
+    ///     Informe all consumers that the <see cref="ManagedConnection"/> is disposing and the connectionProvider will be closed.
     /// </para>
     /// <para>
     ///     The connection will not be reopened.
     /// </para>
     /// </summary>
-    void Closed();
+    void Disposing();
 }

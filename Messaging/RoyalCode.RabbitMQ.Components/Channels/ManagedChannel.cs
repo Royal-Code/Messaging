@@ -95,6 +95,10 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     ///     The behavior of this method depends on the implementation of the channel strategy.
     ///     When the channel is released, the channel strategy will decide whether to close the channel or not.
     /// </para>
+    /// <para>
+    ///     The releasing occurs when the dispose method is called. 
+    ///     If the channel is not released, the channel will not be closed and the connection consumer will not be released.
+    /// </para>
     /// </summary>
     /// <returns>True if the channel is released, otherwise false.</returns>
     protected abstract bool ReleaseChannel();
@@ -351,7 +355,8 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     /// <summary>
     /// Finalize the channel.
     /// </summary>
-    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Not my Pattern")]
+    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", 
+        Justification = "Anti-Pattern, some times should not.")]
     public void Dispose()
     {
         Dispose(disposing: true);

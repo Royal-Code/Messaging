@@ -11,7 +11,7 @@ namespace RoyalCode.RabbitMQ.Components.Connections;
 ///     It is used by the <see cref="ConnectionManager"/> to creates connection with RabbitMQ nodes.
 /// </para>
 /// </summary>
-public interface IConnectionPool
+public interface IConnectionPool : IDisposable
 {
     /// <summary>
     /// Get the next connection from a RabbitMQ node.

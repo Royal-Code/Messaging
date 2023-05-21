@@ -24,7 +24,7 @@ public sealed class ConnectionPoolFactory
     /// <summary>
     /// Creates a new factory.
     /// </summary>
-    /// <param name="options">The options to build the pools.</param>
+    /// <param name="options">The options to build the connections.</param>
     /// <param name="configuration">The application configurations.</param>
     /// <param name="loggerFactory">Logger factory.</param>
     /// <param name="decrypter">Optional connection decrypter.</param>

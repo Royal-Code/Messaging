@@ -7,8 +7,10 @@ internal sealed class ConnectionPool : IConnectionPool
 {
     private readonly ConnectionFactory[] connectionFactories;
     private readonly ILogger logger;
+    private volatile IConnection? currentConnection;
     private int nextConnectionIndex;
-    private IConnection? currentConnection;
+
+    private bool disposing;
 
     public ConnectionPool(
         bool shouldTryBackToFirstConnection,
@@ -52,9 +54,8 @@ internal sealed class ConnectionPool : IConnectionPool
 
     public void TryReconnect(Action<IConnection, bool> callback)
     {
-        //if (currentConnection is null)
-        //    throw new InvalidOperationException(
-        //        "It can try reconnect at the first time, before the GetNextConnection method must be called.");
+        if (callback is null)
+            throw new ArgumentNullException(nameof(callback));
 
         var thread = new Thread(Reconnector);
         thread.Start(callback);
@@ -69,10 +70,7 @@ internal sealed class ConnectionPool : IConnectionPool
 
     private void Reconnector(object? callbackObject)
     {
-        if (callbackObject is null) 
-            throw new ArgumentNullException(nameof(callbackObject));
-        
-        var callback = (Action<IConnection, bool>)callbackObject;
+        var callback = (Action<IConnection, bool>)callbackObject!;
 
         if (currentConnection?.IsOpen ?? false)
             callback(currentConnection, true);
@@ -81,6 +79,9 @@ internal sealed class ConnectionPool : IConnectionPool
         while(true)
         {
             Thread.Sleep(RetryConnectionDelay);
+
+            if (disposing)
+                break;
 
             if (currentConnection?.IsOpen ?? false)
             {
@@ -113,6 +114,12 @@ internal sealed class ConnectionPool : IConnectionPool
                     RetryConnectionDelay.TotalSeconds);
             }
         }
+
+        if (disposing && currentConnection is not null)
+        {
+            currentConnection?.Dispose();
+            currentConnection = null;
+        }
     }
 
     private void BackToFirstConnection(object? callbackObject)
@@ -130,6 +137,9 @@ internal sealed class ConnectionPool : IConnectionPool
         while (true)
         {
             Thread.Sleep(RetryConnectionDelay);
+            
+            if (disposing)
+                break;
 
             try
             {
@@ -156,5 +166,23 @@ internal sealed class ConnectionPool : IConnectionPool
                     RetryConnectionDelay.TotalSeconds);
             }
         }
+
+        if (disposing && currentConnection is not null)
+        {
+            currentConnection?.Dispose();
+            currentConnection = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (disposing)
+            return;
+
+        disposing = true;
+
+        logger.LogDebug("Disposing the connection pool");
+
+        currentConnection = null;
     }
 }

@@ -9,7 +9,7 @@ public sealed class ChannelManager : IChannelManager, IDisposable
 {
     private readonly ManagedConnection managedConnection;
     private readonly ILoggerFactory loggerFactory;
-    private readonly IOptionsMonitor<ChannelPoolOptions> optionsMonitor;
+    private readonly ChannelPool channelPool;
     private readonly ILogger logger;
 
     private SharedManagedChannel? sharedChannel;
@@ -32,8 +32,13 @@ public sealed class ChannelManager : IChannelManager, IDisposable
 
         this.managedConnection = managedConnection;
         this.loggerFactory = loggerFactory;
-        this.optionsMonitor = optionsMonitor;
+
         logger = loggerFactory.CreateLogger<ChannelManager>();
+        channelPool = new ChannelPool(
+            managedConnection,
+            loggerFactory,
+            optionsMonitor.Get(clusterName).PoolMaxSize,
+            clusterName);
     }
 
     /// <inheritdoc />
@@ -52,12 +57,7 @@ public sealed class ChannelManager : IChannelManager, IDisposable
     }
 
     /// <inheritdoc />
-    public ManagedChannel GetPooledChannel()
-    {
-
-
-        throw new NotImplementedException();
-    }
+    public ManagedChannel GetPooledChannel() => channelPool.GetManagedChannel();
 
     /// <inheritdoc />
     public ManagedChannel GetSharedChannel() => sharedChannel ??= SafeCreateSharedChannel();
@@ -66,6 +66,9 @@ public sealed class ChannelManager : IChannelManager, IDisposable
     {
         lock(logger)
         {
+            if (disposed)
+                throw new ObjectDisposedException(nameof(ChannelManager));
+
             if (sharedChannel is not null)
                 return sharedChannel;
             
