@@ -19,6 +19,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     private IModel? model;
 
     private bool modelCreated;
+    private bool disposing;
     private bool disposed;
 
     /// <summary>
@@ -272,28 +273,36 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     #region IConnectionConsumer implementation
 
 
-    void IConnectionConsumer.Closed()
+    void IConnectionConsumer.Disposing()
     {
-        logger.LogInformation("Connection closed. Notifying consumers.");
+        if (disposing || disposed)
+            return;
 
-        TerminateModel();
-        connection = null;
-        modelCreated = false;
+        disposing = true;
 
-        lock (consumers)
+        logger.LogInformation("Connection is disposing. Notifying consumers.");
+
+        IChannelConsumer[] consumers;
+        lock (this.consumers)
         {
-            foreach (var consumer in consumers)
+            consumers = this.consumers.ToArray();
+        }
+
+        foreach (var consumer in consumers)
+        {
+            try
             {
-                try
-                {
-                    consumer.ConnectionClosed();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Failed notifying (closed) for the consumer: {consumer).", consumer);
-                }
+                consumer.Disposing();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed notifying (closed) for the consumer: {consumer).", consumer);
             }
         }
+
+        TerminateModel(true);
+        connection = null;
+        modelCreated = false;
     }
 
     void IConnectionConsumer.Reloaded(IConnection connection, bool autorecovered)

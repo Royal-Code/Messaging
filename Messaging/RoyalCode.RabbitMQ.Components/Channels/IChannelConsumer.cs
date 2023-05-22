@@ -19,11 +19,6 @@ public interface IChannelConsumer
     void Consume(IModel channel);
 
     /// <summary>
-    /// Informs when the connection has been closed, usually due to some error or failure.
-    /// </summary>
-    void ConnectionClosed();
-
-    /// <summary>
     /// Informs when the connection has been re-established.
     /// </summary>
     /// <param name="channel">
@@ -34,12 +29,6 @@ public interface IChannelConsumer
     void ConnectionRecovered(IModel channel, bool autorecovered);
 
     /// <summary>
-    /// Informs when the channel has been closed, usually due to some error or failure,
-    /// but the connection is still open.
-    /// </summary>
-    void ChannelClosed();
-
-    /// <summary>
     /// <para>
     ///     Informs when the channel has been re-established,
     ///     but not when the connection is auto recovered or re-established.
@@ -48,4 +37,11 @@ public interface IChannelConsumer
     /// </summary>
     /// <param name="channel">The <see cref="IModel"/> to access the channels.</param>
     void ChannelRecovered(IModel channel);
+
+    /// <summary>
+    /// <para>
+    ///     Informs when the connection is disposing and the channel is closing.
+    /// </para>
+    /// </summary>
+    void Disposing();
 }

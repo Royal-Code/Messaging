@@ -72,6 +72,7 @@ internal sealed class ChannelPool : IPooledObjectPolicy<PooledManagedChannel>, I
     /// <inheritdoc />
     public void Dispose()
     {
+        logger.LogDebug("Disposing the channel pool for the RabbitMQ cluster {ClusterName}", clusterName);
         pool.Dispose();
     }
 }

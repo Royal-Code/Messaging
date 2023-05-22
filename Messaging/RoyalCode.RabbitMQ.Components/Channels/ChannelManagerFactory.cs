@@ -69,13 +69,12 @@ internal sealed class ChannelManagerFactory : IChannelManagerFactory, IDisposabl
 
         lock (channelManagers)
         {
+            logger.LogDebug("Disposing channel managers");
             foreach (var channelManager in channelManagers.Values)
             {
                 channelManager.Dispose();
             }
             channelManagers.Clear();
         }
-
-        throw new NotImplementedException();
     }
 }

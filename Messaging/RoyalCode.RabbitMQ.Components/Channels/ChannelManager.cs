@@ -90,13 +90,12 @@ public sealed class ChannelManager : IChannelManager, IDisposable
 
         disposed = true;
 
+        logger.LogDebug("Disposing channel manager for the RabbitMQ cluster {ClusterName}", ClusterName);
+
         sharedChannel?.Terminate();
         sharedChannel = null;
 
         channelPool?.Dispose();
-
-
-        throw new NotImplementedException();
     }
 }
 
