@@ -1,5 +1,4 @@
 ﻿using RabbitMQ.Client;
-using System;
 using System.Text;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;

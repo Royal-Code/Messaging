@@ -24,7 +24,7 @@ public sealed class ConnectionPoolFactory
     /// <summary>
     /// Creates a new factory.
     /// </summary>
-    /// <param name="options">The options to build the connections.</param>
+    /// <param name="options">The connectionOptions to build the connections.</param>
     /// <param name="configuration">The application configurations.</param>
     /// <param name="loggerFactory">Logger factory.</param>
     /// <param name="decrypter">Optional connection decrypter.</param>
@@ -53,21 +53,21 @@ public sealed class ConnectionPoolFactory
     /// </exception>
     public IConnectionPool Create(string name)
     {
-        var options = this.options.Get(name);
+        var connectionOptions = options.Get(name);
 
-        if (!options.HasConnections())
+        if (!connectionOptions.HasConnections())
             throw new InvalidOperationException($"None connection configurated for RabbitMQ Cluster name '{name}'");
 
-        var connectionStrings = GetConnectionStrings(options.ConnectionStringNames);
+        var connectionStrings = GetConnectionStrings(connectionOptions.ConnectionStringNames);
 
         var connectionFactories = CreateConnectionInfos(name, connectionStrings);
 
-        if (options.ConnectionCreationInterceptor is not null)
-            connectionFactories.Each(options.ConnectionCreationInterceptor);
+        if (connectionOptions.ConnectionCreationInterceptor is not null)
+            connectionFactories.Each(connectionOptions.ConnectionCreationInterceptor);
 
 
-        return new ConnectionPool(options.ShouldTryBackToFirstConnection,
-            options.RetryConnectionDelay,
+        return new ConnectionPool(connectionOptions.ShouldTryBackToFirstConnection,
+            connectionOptions.RetryConnectionDelay,
             connectionFactories,
             loggerFactory.CreateLogger<ConnectionPool>());
     }

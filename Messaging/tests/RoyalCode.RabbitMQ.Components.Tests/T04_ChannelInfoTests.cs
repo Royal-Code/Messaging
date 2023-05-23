@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using RabbitMQ.Client.Exceptions;
 using RoyalCode.RabbitMQ.Components.Communication;
+using RoyalCode.RabbitMQ.Components.Declarations;
 using Xunit;
 
 namespace RoyalCode.RabbitMQ.Components.Tests;

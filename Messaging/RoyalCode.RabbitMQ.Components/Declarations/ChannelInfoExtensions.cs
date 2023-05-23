@@ -1,4 +1,4 @@
-﻿namespace RoyalCode.RabbitMQ.Components.Communication;
+﻿namespace RoyalCode.RabbitMQ.Components.Declarations;
 
 /// <summary>
 /// <para>

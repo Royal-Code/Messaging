@@ -69,7 +69,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     ///     by auto-recovery of the connection.
     /// </para>
     /// </summary>
-    public event EventHandler<bool> OnReconnected;
+    public event EventHandler<bool>? OnReconnected;
 
     /// <summary>
     /// <para>
@@ -116,7 +116,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     /// <returns>True if the channel is released, otherwise false.</returns>
     protected abstract bool ReleaseChannel();
 
-    internal void Release(IChannelConsumer consumer)
+    private void Release(IChannelConsumer consumer)
     {
         lock (consumers)
         {
@@ -162,7 +162,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     {
         modelCreated = true;
 
-        logger.LogDebug("Channel created. Notifying consumers.");
+        logger.LogDebug("Channel created. Notifying currentConsumers.");
 
         lock (consumers)
         {
@@ -209,7 +209,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
     private void ModelReCreated(IModel model, bool autorecovered)
     {
-        logger.LogInformation("Channel re-created. Notifying consumers.");
+        logger.LogInformation("Channel re-created. Notifying currentConsumers.");
 
         lock (consumers)
         {
@@ -218,7 +218,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
                 try
                 {
                     logger.LogDebug("Notifying that the model has been re-created for the consumer: {consumer}.", consumer);
-                    consumer.ConnectionRecovered(model, autorecovered);
+                    consumer.Reloaded(model, autorecovered);
                 }
                 catch (Exception ex)
                 {
@@ -262,12 +262,12 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     /// </summary>
     protected void CleanEvents()
     {
-        OnReconnected = null!;
+        OnReconnected = null;
     }
 
     private void OnModelShutdown(object? sender, ShutdownEventArgs e)
     {
-        // if the connection was closed, then is not necessary to notify the consumers, either re-create the model.
+        // if the connection was closed, then is not necessary to notify the currentConsumers, either re-create the model.
         if (!modelCreated || !consumerStatus.IsConnected || model is { IsOpen: true })
             return;
 
@@ -287,15 +287,15 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
         disposing = true;
 
-        logger.LogInformation("Connection is disposing. Notifying consumers.");
+        logger.LogInformation("Connection is disposing. Notifying currentConsumers.");
 
-        IChannelConsumer[] consumers;
-        lock (this.consumers)
+        IChannelConsumer[] currentConsumers;
+        lock (consumers)
         {
-            consumers = this.consumers.ToArray();
+            currentConsumers = consumers.ToArray();
         }
 
-        foreach (var consumer in consumers)
+        foreach (var consumer in currentConsumers)
         {
             try
             {
@@ -329,7 +329,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
     #endregion
 
-    private class ManagedConsumer : IChannelConsumerStatus
+    private sealed class ManagedConsumer : IChannelConsumerStatus
     {
         private readonly ManagedChannel managedChannel;
         private readonly IChannelConsumer consumer;
@@ -342,7 +342,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
         public bool IsOpen => managedChannel.IsOpen;
 
-        public void Release()
+        public void Dispose()
         {
             managedChannel.Release(consumer);
         }
@@ -364,17 +364,20 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
         disposed = true;
 
         TerminateModel(true);
+
         connection = null;
+        model = null;
+        OnReconnected = null;
+
         modelCreated = false;
     }
 
     /// <summary>
     /// Finalize the channel.
     /// </summary>
-    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", 
-        Justification = "Anti-Pattern, some times should not.")]
     public void Dispose()
     {
         Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

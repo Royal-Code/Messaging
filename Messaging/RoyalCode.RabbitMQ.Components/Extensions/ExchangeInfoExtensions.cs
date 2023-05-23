@@ -1,4 +1,6 @@
-﻿namespace RoyalCode.RabbitMQ.Components.Communication;
+﻿using RoyalCode.RabbitMQ.Components.Declarations;
+
+namespace RoyalCode.RabbitMQ.Components.Communication;
 
 /// <summary>
 /// Extension methods for <see cref="ExchangeInfo"/>.

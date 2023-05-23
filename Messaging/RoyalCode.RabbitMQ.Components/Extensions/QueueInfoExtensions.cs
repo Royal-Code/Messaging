@@ -1,4 +1,5 @@
 ﻿using System;
+using RoyalCode.RabbitMQ.Components.Declarations;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 

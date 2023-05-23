@@ -1,5 +1,6 @@
 ﻿using RabbitMQ.Client.Events;
 using RoyalCode.RabbitMQ.Components.Communication;
+using RoyalCode.RabbitMQ.Components.Declarations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

@@ -1,7 +1,7 @@
 ﻿using RabbitMQ.Client;
-using System.Collections.Generic;
+using RoyalCode.RabbitMQ.Components.Communication;
 
-namespace RoyalCode.RabbitMQ.Components.Communication;
+namespace RoyalCode.RabbitMQ.Components.Declarations;
 
 /// <summary>
 /// <para>
@@ -67,7 +67,7 @@ public class ExchangeInfo
     /// <summary>
     /// Properties used to declare the exchange.
     /// </summary>
-    public Dictionary<string, object> Properties = new Dictionary<string, object>();
+    public Dictionary<string, object> Properties { get; } = new();
 
     /// <summary>
     /// Creates a new persistent Exchange.

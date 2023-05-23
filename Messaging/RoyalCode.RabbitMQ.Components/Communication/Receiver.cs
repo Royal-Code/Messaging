@@ -2,9 +2,7 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RoyalCode.RabbitMQ.Components.Channels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using RoyalCode.RabbitMQ.Components.Declarations;
 
 namespace RoyalCode.RabbitMQ.Components.Communication;
 
@@ -22,30 +20,24 @@ public class Receiver : BaseChannelConsumer
     /// <summary>
     /// Creates a new receiver to listen messages from RabbitMQ.
     /// </summary>
-    /// <param name="channelInfo">Information about the channel from where the messages will be received.</param>
     /// <param name="channelManager">A channel manager to connection to RabbitMQ and get channels (<see cref="IModel"/>).</param>
-    /// <param name="clusterName">The name of the cluster to connect.</param>
     /// <param name="channelStrategy">The strategy for consuming channels.</param>
+    /// <param name="channelInfo">Information about the channel from where the messages will be received.</param>
     /// <param name="logger">The logger.</param>
     /// <exception cref="CommunicationException">
     ///     If the stratery is Shared.
     /// </exception>
     public Receiver(
-        ChannelInfo channelInfo,
         IChannelManager channelManager,
-        string clusterName,
         ChannelStrategy channelStrategy,
+        ChannelInfo channelInfo,
         ILogger<Receiver> logger)
-        : base(channelManager, clusterName, channelStrategy)
+        : base(channelManager, channelStrategy)
     {
-        if (channelStrategy == ChannelStrategy.Pooled)
-            throw new CommunicationException(
-                "Pooled Channel Strategy is not allowed for receivers. The receivers will not realease the channels.");
-
         this.channelInfo = channelInfo;
         this.logger = logger;
 
-        logger.LogDebug("Receiver created for channel: {0}", channelInfo);
+        logger.LogDebug("Receiver created for channel: {channelInfo}", channelInfo);
     }
 
     /// <summary>
@@ -66,21 +58,32 @@ public class Receiver : BaseChannelConsumer
         {
             try
             {
+                if (!Managed.IsOpen)
+                {
+                    AddToWaitingListeners(messageListener);
+                    return;
+                }
+
                 HandleEventForConsumer(messageListener);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to consume a RabbitMQ queue, channel: {0}", channelInfo);
+                logger.LogWarning(ex, "Failed to consume a RabbitMQ queue, channel: {channelInfo}", channelInfo);
 
-                if (!waitingListeners.Contains(messageListener))
-                    waitingListeners.Add(messageListener);
+                AddToWaitingListeners(messageListener);
             }
         }
     }
 
+    private void AddToWaitingListeners(MessageListener messageListener)
+    {
+        if (!waitingListeners.Contains(messageListener))
+            waitingListeners.Add(messageListener);
+    }
+
     private void HandleEventForConsumer(MessageListener messageListener)
     {
-        var model = GetChannelToReceive();
+        var model = Managed.Channel ?? throw new CommunicationException("Channel is closed");
 
         var consumer = new EventingBasicConsumer(model);
         consumer.Received += messageListener.Consumer;
@@ -95,23 +98,30 @@ public class Receiver : BaseChannelConsumer
     }
 
     /// <inheritdoc/>
-    protected override void ChannelProviderIsAvailable()
+    public override void Consume(IModel channel)
     {
-        lock(consumersMap)
+        lock (consumersMap)
         {
-            var listeners = waitingListeners.ToArray();
-            foreach (var messageListener in listeners)
+            var currentWaitingListeners = waitingListeners.ToArray();
+            foreach (var messageListener in currentWaitingListeners)
             {
-                HandleEventForConsumer(messageListener);
-                waitingListeners.Remove(messageListener);
+                try
+                { 
+                    HandleEventForConsumer(messageListener);
+                    waitingListeners.Remove(messageListener);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to consume a RabbitMQ queue, channel: {channelInfo}", channelInfo);
+                }
             }
         }
     }
 
     /// <inheritdoc/>
-    protected override void ConnectionIsRecovered(bool autorecovered)
+    public override void Reloaded(IModel channel, bool autorecovered)
     {
-        if (autorecovered)
+        if (!autorecovered)
         {
             lock (consumersMap)
             {
@@ -122,7 +132,7 @@ public class Receiver : BaseChannelConsumer
                 consumersMap.Clear();
             }
 
-            ChannelProviderIsAvailable();
+            Consume(channel);
         }
     }
 }

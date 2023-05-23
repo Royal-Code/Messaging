@@ -1,31 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\base.targets" />
-	
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5;net6;net7</TargetFrameworks>
-    <Version>1.0.0-preview1.0</Version>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
-    <Description>
-      Components to manage RabbitMQ Cluster Connections and consume channels.
-    </Description>
-    <PackageTags>RoyalCode Messaging RabbitMQ</PackageTags>
-  </PropertyGroup>
+	<Import Project="..\base.targets" />
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.0-preview.4.23260.4" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(AspVer)" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(AspVer)" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="$(AspVer)" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net5;net6;net7</TargetFrameworks>
+		<Version>1.0.0-preview1.0</Version>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+		<Description>
+			Components to manage RabbitMQ Cluster Connections and consume channels.
+		</Description>
+		<PackageTags>RoyalCode Messaging RabbitMQ</PackageTags>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Headers\" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.ObjectPool" Version="$(AspVer)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(AspVer)" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(AspVer)" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="$(AspVer)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Headers\" />
+	</ItemGroup>
 
 </Project>

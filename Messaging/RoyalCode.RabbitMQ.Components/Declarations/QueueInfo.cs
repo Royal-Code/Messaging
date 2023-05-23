@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
+using RoyalCode.RabbitMQ.Components.Communication;
 
-namespace RoyalCode.RabbitMQ.Components.Communication;
+namespace RoyalCode.RabbitMQ.Components.Declarations;
 
 /// <summary>
 /// <para>
@@ -157,9 +156,9 @@ public class QueueInfo
     {
         var declarationArguments = DeadLetter.CreateArguments(Name);
 
-        if (arguments is null) 
+        if (arguments is null)
             return declarationArguments;
-        
+
         foreach (var kvp in arguments)
             declarationArguments[kvp.Key] = kvp.Value;
 
