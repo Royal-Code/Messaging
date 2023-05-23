@@ -1,6 +1,5 @@
-﻿using RoyalCode.RabbitMQ.Components.Declarations;
-
-namespace RoyalCode.RabbitMQ.Components.Communication;
+﻿
+namespace RoyalCode.RabbitMQ.Components.Declarations;
 
 /// <summary>
 /// Extension methods for <see cref="DeadLetterInfo"/>.

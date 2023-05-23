@@ -1,7 +1,5 @@
-﻿using System;
-using RoyalCode.RabbitMQ.Components.Declarations;
-
-namespace RoyalCode.RabbitMQ.Components.Communication;
+﻿
+namespace RoyalCode.RabbitMQ.Components.Declarations;
 
 /// <summary>
 /// Extensions methods for <see cref="ExchangeType"/>.
