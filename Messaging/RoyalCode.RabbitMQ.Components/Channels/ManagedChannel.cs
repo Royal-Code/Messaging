@@ -61,12 +61,24 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
     /// <summary>
     /// <para>
+    ///     Event raised when the channel is re-created, by a reconnection of the connection, 
+    ///     or re-creation of the channel.
+    /// </para>
+    /// <para>
+    ///     The <see cref="bool"/> argument indicates whether the channel is re-created 
+    ///     by auto-recovery of the connection.
+    /// </para>
+    /// </summary>
+    public event EventHandler<bool> OnReconnected;
+
+    /// <summary>
+    /// <para>
     ///     Consume a channel of RabbitMQ, object of type <see cref="IModel"/>.
     /// </para>
     /// </summary>
     /// <param name="consumer">The channel consumer.</param>
     /// <returns>A <ver cref="IDisposable"/> object to finalize the consumption.</returns>
-    public IChannelConsumerStatus Consume(IChannelConsumer consumer)
+    public virtual IChannelConsumerStatus Consume(IChannelConsumer consumer)
     {
         lock (consumers)
         {
@@ -213,6 +225,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
                     logger.LogError(ex, "Failed notifying (model re-created) for the consumer: {consumer).", consumer);
                 }
             }
+            OnReconnected?.Invoke(this, autorecovered);
         }
     }
 
@@ -242,28 +255,23 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
         }
     }
 
+    /// <summary>
+    /// <para>
+    ///     Clean the events.
+    /// </para>
+    /// </summary>
+    protected void CleanEvents()
+    {
+        OnReconnected = null!;
+    }
+
     private void OnModelShutdown(object? sender, ShutdownEventArgs e)
     {
         // if the connection was closed, then is not necessary to notify the consumers, either re-create the model.
-        if (!modelCreated || !consumerStatus.IsConnected)
+        if (!modelCreated || !consumerStatus.IsConnected || model is { IsOpen: true })
             return;
 
-        logger.LogInformation("Channel shutdown. Notifying consumers.");
-
-        lock (consumers)
-        {
-            foreach (var consumer in consumers)
-            {
-                try
-                {
-                    consumer.ChannelClosed();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Failed notifying (shutdown) for the consumer: {consumer).", consumer);
-                }
-            }
-        }
+        logger.LogInformation("Channel shutdown and connection is open, then re-creating the channel.");
 
         RetryReCreateChannel(false);
     }
@@ -271,7 +279,6 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     #endregion
 
     #region IConnectionConsumer implementation
-
 
     void IConnectionConsumer.Disposing()
     {

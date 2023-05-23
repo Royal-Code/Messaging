@@ -11,7 +11,7 @@ namespace RoyalCode.RabbitMQ.Components.Communication;
 /// <summary>
 /// Generic component to receive messange from RabbitMQ.
 /// </summary>
-public class Receiver : BaseComponent
+public class Receiver : BaseChannelConsumer
 {
     private readonly ChannelInfo channelInfo;
     private readonly ILogger logger;

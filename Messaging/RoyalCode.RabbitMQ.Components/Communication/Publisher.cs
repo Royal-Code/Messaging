@@ -9,7 +9,7 @@ namespace RoyalCode.RabbitMQ.Components.Communication;
 /// <summary>
 /// A generic component to publish messages to RabbitMQ.
 /// </summary>
-public class Publisher : BaseComponent
+public class Publisher : BaseChannelConsumer
 {
     private readonly ChannelInfo channelInfo;
     private readonly ILogger<Publisher> logger;

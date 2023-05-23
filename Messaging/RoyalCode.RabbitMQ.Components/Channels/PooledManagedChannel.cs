@@ -23,8 +23,20 @@ internal sealed class PooledManagedChannel : ManagedChannel
     {
         logger.LogDebug("Releasing the pooled channel");
 
+        CleanEvents();
         pool.Return(this);
 
         return false;
+    }
+
+    /// <summary>
+    /// Not supported.
+    /// </summary>
+    /// <param name="consumer"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    public override IChannelConsumerStatus Consume(IChannelConsumer consumer)
+    {
+        throw new NotSupportedException("Is not possible consume a pooled channel");
     }
 }
