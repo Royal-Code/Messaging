@@ -20,7 +20,7 @@ public static class RabbitMqComponentsServiceCollectionExtensions
     {
         services.AddSingleton<ConnectionManager>();
         services.AddSingleton<ConnectionPoolFactory>();
-        services.AddSingleton<IChannelManager, ChannelManager>();
+        services.AddSingleton<IChannelManagerFactory, ChannelManagerFactory>();
 
         return services;
     }

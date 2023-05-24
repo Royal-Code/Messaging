@@ -12,7 +12,7 @@ public sealed class ModelFactory : IDisposable
 {
     private readonly TestChannelConsumer channelConsumer;
     private readonly TestConnectionConsumer connectionConsumer;
-    private readonly IChannelConsumption consumption;
+    private readonly IChannelConsumerStatus status;
     
     public ModelFactory()
     {
@@ -22,22 +22,26 @@ public sealed class ModelFactory : IDisposable
         connectionConsumer = new TestConnectionConsumer();
         ConnectionManager.Consume("test", connectionConsumer);
         
-        ChannelManager = ServiceProvider.GetService<IChannelManager>()!;
+        Factory = ServiceProvider.GetService<IChannelManagerFactory>()!;
+        ChannelManager = Factory.GetChannelManager("test");
         channelConsumer = new TestChannelConsumer();
-        consumption = ChannelManager.Consume("test", channelConsumer);
+        ManagedChannel= ChannelManager.CreateChannel();
+        status = ManagedChannel.Consume(channelConsumer);
     }
 
     public IServiceProvider ServiceProvider { get; }
 
     public ConnectionManager ConnectionManager { get; }
     
+    public IChannelManagerFactory Factory { get; }
+
     public IChannelManager ChannelManager { get; }
-
-    public IConnectionProvider ConnectionProvider => connectionConsumer.ConnectionProvider!;
     
-    public IChannelProvider ChannelProvider => channelConsumer.ChannelProvider!;
+    public ManagedChannel ManagedChannel { get; }
 
-    public IModel Model => ChannelProvider.GetSharedChannel();
+    public IConnection? Connection => connectionConsumer.Connection;
+
+    public IModel Model => ManagedChannel.Channel ?? throw new Communication.CommunicationException("Not connected");
 
     public ILogger<T> CreateLogger<T>() => ServiceProvider.GetRequiredService<ILogger<T>>()!;
 
@@ -47,7 +51,7 @@ public sealed class ModelFactory : IDisposable
         var limit = DateTime.Now.Add(timeout.Value);
         while (true)
         {
-            if ((connectionConsumer.ConnectionProvider?.IsOpen ?? false) && channelConsumer.IsConnected)
+            if ((connectionConsumer.Connection?.IsOpen ?? false) && ManagedChannel.IsOpen)
                 return;
 
             if (DateTime.Now > limit)
@@ -59,6 +63,7 @@ public sealed class ModelFactory : IDisposable
     
     public void Dispose()
     {
-        consumption.Dispose();
+        status.Dispose();
+        ManagedChannel.Dispose();
     }
 }

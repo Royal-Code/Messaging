@@ -66,8 +66,13 @@ public class Publisher : BaseComponent
             throw new CommunicationException(
                 "The connection to RabbitMQ is closed, no messages can be published at the moment");
 
+#if NET5_0_OR_GREATER
         var model = Managed.Channel;
-
+#else
+        var model = Managed.Channel ?? throw new CommunicationException(
+                "The connection to RabbitMQ is closed, no messages can be published at the moment");
+#endif
+        
         var properties = model.CreateBasicProperties();
         message.ConfigureProperties?.Invoke(properties);
 

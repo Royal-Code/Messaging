@@ -21,12 +21,14 @@ public class T03_ChannelTests
     {
         var sp = Container.Prepare();
 
-        var cm = sp.GetService<IChannelManager>();
+        var factory = sp.GetService<IChannelManagerFactory>();
+        var cm = factory!.GetChannelManager("test");
+        var managed = cm.CreateChannel();
 
         var consumer = new TestChannelConsumer();
-        cm!.Consume("test", consumer);
+        managed.Consume(consumer);
         
-        Assert.NotNull(consumer.ChannelProvider);
+        Assert.NotNull(consumer.Model);
     }
 
     [Fact]
@@ -34,15 +36,13 @@ public class T03_ChannelTests
     {
         var sp = Container.Prepare();
 
-        var cm = sp.GetService<IChannelManager>();
-        var consumer = new TestChannelConsumer();
-        cm!.Consume("test", consumer);
-        var provider = consumer.ChannelProvider!;
+        var factory = sp.GetService<IChannelManagerFactory>();
+        var cm = factory!.GetChannelManager("test");
 
-        var first = provider.GetSharedChannel();
+        var first = cm.GetSharedChannel();
         Assert.NotNull(first);
         
-        var second = provider.GetSharedChannel();
+        var second = cm.GetSharedChannel();
         Assert.NotNull(second);
         
         Assert.Same(first, second);
@@ -53,49 +53,50 @@ public class T03_ChannelTests
     {
         var sp = Container.Prepare();
 
-        var cm = sp.GetService<IChannelManager>();
-        var consumer = new TestChannelConsumer();
-        cm!.Consume("test", consumer);
-        var provider = consumer.ChannelProvider!;
+        var factory = sp.GetService<IChannelManagerFactory>();
+        var cm = factory!.GetChannelManager("test");
 
-        var first = provider.CreateChannel();
-        var second = provider.CreateChannel();
-        
+        var first = cm.CreateChannel();
+        Assert.NotNull(first);
+
+        var second = cm.CreateChannel();
+        Assert.NotNull(second);
+
         Assert.NotSame(first, second);
     }
 
     [Fact]
-    public async Task T05_GetPooledModels_NotSame()
+    public void T05_GetPooledModels_NotSame()
     {
         var sp = Container.Prepare();
 
-        var cm = sp.GetService<IChannelManager>();
-        var consumer = new TestChannelConsumer();
-        cm!.Consume("test", consumer);
-        var provider = consumer.ChannelProvider!;
-
-        var first = await provider.GetPooledChannelAsync();
-        var second = await provider.GetPooledChannelAsync();
+        var factory = sp.GetService<IChannelManagerFactory>();
+        var cm = factory!.GetChannelManager("test");
         
+        var first = cm.GetPooledChannel();
+        var second = cm.GetPooledChannel();
+
         Assert.NotSame(first, second);
     }
     
     [Fact]
-    public async Task T06_GetPooledModels_Same()
+    public void T06_GetPooledModels_Same()
     {
         var sp = Container.Prepare();
 
-        var cm = sp.GetService<IChannelManager>();
-        var consumer = new TestChannelConsumer();
-        cm!.Consume("test", consumer);
-        var provider = consumer.ChannelProvider!;
+        var factory = sp.GetService<IChannelManagerFactory>();
+        var cm = factory!.GetChannelManager("test");
 
-        var first = await provider.GetPooledChannelAsync();
-        provider.ReturnPooledChannel(first);
-        
-        var second = await provider.GetPooledChannelAsync();
-        provider.ReturnPooledChannel(second);
-        
+        var managed = cm.GetPooledChannel();
+        var first = managed.Channel;
+
+        managed.Dispose();
+
+        managed = cm.GetPooledChannel();
+        var second = managed.Channel;
+
+        managed.Dispose();
+
         Assert.Same(first, second);
     }
 }

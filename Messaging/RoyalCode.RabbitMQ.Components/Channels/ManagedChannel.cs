@@ -85,7 +85,11 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
             consumers.Add(consumer);
         }
 
+#if NET5_0_OR_GREATER
         if (IsOpen)
+#else
+        if (IsOpen && model is not null)
+#endif
         {
             try
             {

@@ -1,26 +1,24 @@
+using RabbitMQ.Client;
 using RoyalCode.RabbitMQ.Components.Channels;
 
 namespace RoyalCode.RabbitMQ.Components.Tests;
 
 public class TestChannelConsumer : IChannelConsumer
 {
-    public IChannelProvider? ChannelProvider { get; private set; }
-    
-    public bool IsConnected { get; private set; }
-    
-    public void Consume(IChannelProvider provider)
+    public IModel? Model { get; private set; }
+
+    public void Consume(IModel channel)
     {
-        ChannelProvider = provider;
-        IsConnected = true;
+        Model = channel;
     }
 
-    public void ConnectionClosed()
+    public void Disposing()
     {
-        IsConnected = false;
+        Model = null;
     }
 
-    public void ConnectionRecovered(bool autorecovered)
+    public void Reloaded(IModel channel, bool autorecovered)
     {
-        IsConnected = true;
+        Model = channel;
     }
 }

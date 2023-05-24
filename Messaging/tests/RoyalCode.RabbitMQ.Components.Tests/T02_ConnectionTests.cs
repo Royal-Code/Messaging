@@ -18,7 +18,6 @@ public class T02_ConnectionTests
         var consumer = new TestConnectionConsumer();
         cm!.Consume("test", consumer);
 
-        Assert.NotNull(consumer.ConnectionProvider);
         Assert.NotNull(consumer.Connection);
     }
     
@@ -34,13 +33,13 @@ public class T02_ConnectionTests
         var consumer = new TestConnectionConsumer();
         cm!.Consume("test", consumer);
         var first = consumer.Connection;
-        consumer.Dispose();
+        consumer.Disposing();
         
         consumer = new TestConnectionConsumer();
         cm.Consume("test", consumer);
         var second = consumer.Connection;
-        consumer.Dispose();
-        
+        consumer.Disposing();
+
         Assert.True(first!.IsOpen);
         Assert.Same(first, second);
     }

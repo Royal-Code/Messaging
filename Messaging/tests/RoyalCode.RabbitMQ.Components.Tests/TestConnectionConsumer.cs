@@ -5,22 +5,20 @@ namespace RoyalCode.RabbitMQ.Components.Tests;
 
 public class TestConnectionConsumer : IConnectionConsumer
 {
-    public IConnection? Connection => ConnectionProvider?.Connection;
+    public IConnection? Connection { get; private set; }
 
-    public IConnectionProvider? ConnectionProvider { get; private set; }
-
-    public void Closed() { }
-
-    public void Consume(IConnectionProvider connectionProvider)
+    public void Consume(IConnection connection)
     {
-        ConnectionProvider = connectionProvider;
+        Connection = connection;
     }
 
-    public void Dispose()
+    public void Disposing()
     {
-        ConnectionProvider?.Dispose();
-        ConnectionProvider = null;
+        Connection = null;
     }
 
-    public void Reload(bool autorecovered) { }
+    public void Reloaded(IConnection connection, bool autorecovered)
+    {
+        Connection = connection;
+    }
 }

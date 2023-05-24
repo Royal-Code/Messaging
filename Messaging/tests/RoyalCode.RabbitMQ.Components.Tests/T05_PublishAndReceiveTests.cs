@@ -21,7 +21,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             info,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -43,7 +43,7 @@ public class T05_PublishAndReceiveTests
         {
             _ = new Publisher(
                 info,
-                factory.ChannelManager,
+                factory.Factory,
                 "test",
                 Channels.ChannelStrategy.Shared,
                 factory.CreateLogger<Publisher>());
@@ -60,7 +60,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             info,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -84,7 +84,7 @@ public class T05_PublishAndReceiveTests
         var listener = new MessageListener(Consumer);
         var receiver = new Receiver(
             info,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -93,7 +93,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             info,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -124,7 +124,7 @@ public class T05_PublishAndReceiveTests
         var listener = new MessageListener(Consumer);
         var receiver = new Receiver(
             queue,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -133,7 +133,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             exchange,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -166,7 +166,7 @@ public class T05_PublishAndReceiveTests
         var listener = new MessageListener(Consumer);
         var receiver = new Receiver(
             queue1,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -175,7 +175,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             exchange,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -222,7 +222,7 @@ public class T05_PublishAndReceiveTests
 
         var receiver1 = new Receiver(
             queue1,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -230,7 +230,7 @@ public class T05_PublishAndReceiveTests
 
         var receiver2 = new Receiver(
             queue2,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -238,7 +238,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             exchange,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
@@ -305,7 +305,7 @@ public class T05_PublishAndReceiveTests
 
         var receiver1 = new Receiver(
             queue1,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -313,7 +313,7 @@ public class T05_PublishAndReceiveTests
 
         var receiver2 = new Receiver(
             queue2,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Shared,
             factory.CreateLogger<Receiver>());
@@ -321,7 +321,7 @@ public class T05_PublishAndReceiveTests
 
         var publisher = new Publisher(
             exchange,
-            factory.ChannelManager,
+            factory.Factory,
             "test",
             Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
