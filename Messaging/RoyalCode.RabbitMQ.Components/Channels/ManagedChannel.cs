@@ -36,9 +36,9 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
         ManagedConnection managedConnection,
         ILogger logger)
     {
-        consumerStatus = managedConnection.AddConsumer(this);
         this.logger = logger;
         onModelShutdowEventHander = OnModelShutdown;
+        consumerStatus = managedConnection.AddConsumer(this);
     }
 
     /// <summary>
@@ -130,9 +130,9 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
 
     #region channel management
 
-    private void CreateModel()
+    private void CreateModel(bool initializing = false)
     {
-        if (!consumerStatus.IsConnected)
+        if (!initializing && !consumerStatus.IsConnected)
         {
             logger.LogDebug("Connection is not open. Cannot create a channel.");
             RetryCreateChannel();
@@ -328,7 +328,7 @@ public abstract class ManagedChannel : IConnectionConsumer, IDisposable
     void IConnectionConsumer.Consume(IConnection connection)
     {
         this.connection = connection;
-        CreateModel();
+        CreateModel(true);
     }
 
     #endregion

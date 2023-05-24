@@ -8,14 +8,35 @@ namespace RoyalCode.RabbitMQ.Components.Tests;
 public class T03_ChannelTests
 {
     [Fact]
-    public void T01_GetChannelManager()
+    public void T01_1_GetChannelManager_FromContainer_MustReturnNull()
     {
         var sp = Container.Prepare();
 
         var cm = sp.GetService<IChannelManager>();
+        Assert.Null(cm);
+    }
+
+    [Fact]
+    public void T01_2_GetChannelManagerFactory_FromContainer_MustReturnValue()
+    {
+        var sp = Container.Prepare();
+
+        var f = sp.GetService<IChannelManagerFactory>();
+        Assert.NotNull(f);
+    }
+
+    [Fact]
+    public void T01_3_GetChannelManager_FromFactory_MustReturnValue()
+    {
+        var sp = Container.Prepare();
+
+        var f = sp.GetService<IChannelManagerFactory>();
+        Assert.NotNull(f);
+
+        var cm = f!.GetChannelManager("test");
         Assert.NotNull(cm);
     }
-    
+
     [Fact]
     public void T02_ConsumeFromChannelManager()
     {

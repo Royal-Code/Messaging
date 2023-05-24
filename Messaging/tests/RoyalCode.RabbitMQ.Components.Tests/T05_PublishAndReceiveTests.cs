@@ -14,21 +14,20 @@ namespace RoyalCode.RabbitMQ.Components.Tests;
 public class T05_PublishAndReceiveTests
 {
     [Fact]
-    public async Task T01_PublishToFanout()
+    public void T01_PublishToFanout()
     {
         using var factory = new ModelFactory();
         var info = ChannelInfo.FanoutExchange("Test_PublishToFanout");
 
-        var publisher = new Publisher(
-            info,
-            factory.Factory,
-            "test",
+        using var publisher = new Publisher(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Pooled,
+            info,
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T01_PublishToFanout));
 
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         factory.Model.ExchangeDelete(info.Name, false);
     }
@@ -42,10 +41,9 @@ public class T05_PublishAndReceiveTests
         Assert.Throws<CommunicationException>(() =>
         {
             _ = new Publisher(
-                info,
-                factory.Factory,
-                "test",
+                factory.ChannelManager,
                 Channels.ChannelStrategy.Shared,
+                info,
                 factory.CreateLogger<Publisher>());
         });
         
@@ -53,21 +51,20 @@ public class T05_PublishAndReceiveTests
     }
 
     [Fact]
-    public async Task T03_PublishToQueue()
+    public void T03_PublishToQueue()
     {
         using var factory = new ModelFactory();
         var info = ChannelInfo.TemporaryQueue();
 
-        var publisher = new Publisher(
-            info,
-            factory.Factory,
-            "test",
+        using var publisher = new Publisher(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Pooled,
+            info,
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T03_PublishToQueue));
 
-        await publisher.Publish(message);
+        publisher.Publish(message);
     }
 
     [Fact]
@@ -77,30 +74,29 @@ public class T05_PublishAndReceiveTests
         var info = ChannelInfo.TemporaryQueue();
 
         string? msg = null;
-        void Consumer(object? sender, BasicDeliverEventArgs e) {
+        void Consumer(object? sender, BasicDeliverEventArgs e) 
+        {
             msg = Encoding.UTF8.GetString(e.Body.Span);
-        };
+        }
 
         var listener = new MessageListener(Consumer);
-        var receiver = new Receiver(
-            info,
-            factory.Factory,
-            "test",
+        using var receiver = new Receiver(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Shared,
+            info,
             factory.CreateLogger<Receiver>());
 
         receiver.Listen(listener);
 
-        var publisher = new Publisher(
-            info,
-            factory.Factory,
-            "test",
+        using var publisher = new Publisher(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Pooled,
+            info,
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T04_PublishToQueueAndReceive));
 
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         await Task.Delay(30);
 
@@ -119,28 +115,26 @@ public class T05_PublishAndReceiveTests
         void Consumer(object? sender, BasicDeliverEventArgs e)
         {
             msg = Encoding.UTF8.GetString(e.Body.Span);
-        };
+        }
 
         var listener = new MessageListener(Consumer);
-        var receiver = new Receiver(
-            queue,
-            factory.Factory,
-            "test",
+        using var receiver = new Receiver(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Shared,
+            queue,
             factory.CreateLogger<Receiver>());
 
         receiver.Listen(listener);
 
-        var publisher = new Publisher(
+        using var publisher = new Publisher(
+            factory.ChannelManager,
+            Channels.ChannelStrategy.Pooled, 
             exchange,
-            factory.Factory,
-            "test",
-            Channels.ChannelStrategy.Pooled,
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T05_PublishToFanoutAndReceive));
 
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         await Task.Delay(30);
 
@@ -161,36 +155,34 @@ public class T05_PublishAndReceiveTests
         void Consumer(object? sender, BasicDeliverEventArgs e)
         {
             msgs.Add(new Tuple<string, string>(e.RoutingKey, Encoding.UTF8.GetString(e.Body.Span)));
-        };
+        }
 
         var listener = new MessageListener(Consumer);
-        var receiver = new Receiver(
-            queue1,
-            factory.Factory,
-            "test",
+        using var receiver = new Receiver(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Shared,
+            queue1,
             factory.CreateLogger<Receiver>());
 
         receiver.Listen(listener);
 
-        var publisher = new Publisher(
-            exchange,
-            factory.Factory,
-            "test",
+        using var publisher = new Publisher(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Pooled,
+            exchange,
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T06_PublishToRouteAndReceive1))
         {
             RoutingKey = "orange"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         message = new PublicationMessage(nameof(T06_PublishToRouteAndReceive1))
         {
             RoutingKey = "black"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         await Task.Delay(30);
 
@@ -216,56 +208,53 @@ public class T05_PublishAndReceiveTests
         void Consumer(object? sender, BasicDeliverEventArgs e)
         {
             msgs.Add(new Tuple<string, string>(e.RoutingKey, Encoding.UTF8.GetString(e.Body.Span)));
-        };
+        }
 
         var listener = new MessageListener(Consumer);
 
-        var receiver1 = new Receiver(
-            queue1,
-            factory.Factory,
-            "test",
+        using var receiver1 = new Receiver(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Shared,
+            queue1,
             factory.CreateLogger<Receiver>());
         receiver1.Listen(listener);
 
-        var receiver2 = new Receiver(
-            queue2,
-            factory.Factory,
-            "test",
+        using var receiver2 = new Receiver(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Shared,
+            queue2,
             factory.CreateLogger<Receiver>());
         receiver2.Listen(listener);
 
-        var publisher = new Publisher(
-            exchange,
-            factory.Factory,
-            "test",
-            Channels.ChannelStrategy.Pooled,
+        using var publisher = new Publisher(
+            factory.ChannelManager,
+            Channels.ChannelStrategy.Pooled, 
+            exchange, 
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T07_PublishToRouteAndReceive2))
         {
             RoutingKey = "orange"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         message = new PublicationMessage(nameof(T07_PublishToRouteAndReceive2))
         {
             RoutingKey = "black"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         message = new PublicationMessage(nameof(T07_PublishToRouteAndReceive2))
         {
             RoutingKey = "green"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         message = new PublicationMessage(nameof(T07_PublishToRouteAndReceive2))
         {
             RoutingKey = "white"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         await Task.Delay(30);
 
@@ -299,80 +288,84 @@ public class T05_PublishAndReceiveTests
         void Consumer(object? sender, BasicDeliverEventArgs e)
         {
             msgs.Push(new Tuple<string, string>(e.RoutingKey, Encoding.UTF8.GetString(e.Body.Span)));
-        };
+        }
 
         var listener = new MessageListener(Consumer);
 
-        var receiver1 = new Receiver(
-            queue1,
-            factory.Factory,
-            "test",
+        using var receiver1 = new Receiver(
+            factory.ChannelManager,
             Channels.ChannelStrategy.Shared,
+            queue1, 
             factory.CreateLogger<Receiver>());
         receiver1.Listen(listener);
 
-        var receiver2 = new Receiver(
-            queue2,
-            factory.Factory,
-            "test",
+        using var receiver2 = new Receiver(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Shared,
+            queue2,
             factory.CreateLogger<Receiver>());
         receiver2.Listen(listener);
 
-        var publisher = new Publisher(
-            exchange,
-            factory.Factory,
-            "test",
+        using var publisher = new Publisher(
+            factory.ChannelManager, 
             Channels.ChannelStrategy.Pooled,
+            exchange, 
             factory.CreateLogger<Publisher>());
 
         var message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "quick.orange.rabbit"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "lazy.orange.elephant"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "quick.orange.fox"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "lazy.brown.fox"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "lazy.pink.rabbit"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "quick.brown.fox"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "quick.orange.male.rabbit"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
+        await Task.Delay(10);
 
         message = new PublicationMessage(nameof(T08_PublishToTopicAndReceive))
         {
             RoutingKey = "lazy.orange.male.rabbit"
         };
-        await publisher.Publish(message);
+        publisher.Publish(message);
 
         await Task.Delay(30);
 

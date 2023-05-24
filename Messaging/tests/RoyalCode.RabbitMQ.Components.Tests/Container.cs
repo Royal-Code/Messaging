@@ -12,7 +12,10 @@ public class Container
         var config = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", false, true)
+            .AddUserSecrets<Container>()
             .Build();
+
+
 
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(config);

@@ -18,8 +18,15 @@ public abstract class BaseComponent : IDisposable
     /// <param name="channelManager"></param>
     /// <param name="channelStrategy"></param>
     /// <exception cref="CommunicationException"></exception>
+    // ReSharper disable S1699
     protected BaseComponent(IChannelManager channelManager, ChannelStrategy channelStrategy)
     {
+#pragma warning disable S1699 // Constructors should only call non-overridable methods, but
+                              // in this case, the super classes should validate the channel strategy
+                              // before the managed channel is created.
+        GuardChannelStrategy(channelStrategy);
+
+        // creates the managed channel
         Managed = channelStrategy switch
         {
             ChannelStrategy.Exclusive => channelManager.CreateChannel(),
@@ -27,6 +34,8 @@ public abstract class BaseComponent : IDisposable
             ChannelStrategy.Pooled => channelManager.GetPooledChannel(),
             _ => throw new CommunicationException($"Invalid channel strategy: {channelStrategy}")
         };
+
+        // subscribe to the reconnection event
         onReconnected = OnReconnected;
         Managed.OnReconnected += onReconnected;
     }

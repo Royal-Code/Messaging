@@ -37,8 +37,8 @@ public class T04_ChannelInfoTests
     public async Task T02_PersistentQueueAsync()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
-        
+        var model = factory.ChannelManager.CreateChannel().Channel!;
+
         var info = ChannelInfo.PersistentQueue("Test_Persistent_Queue");
         var ok = info.GetConsumerQueue(model);
         
@@ -47,10 +47,10 @@ public class T04_ChannelInfoTests
         model.Dispose();
         await Task.Delay(30);
 
-        factory.ConnectionProvider.Connection.Close(1, "Closing for tests purposes");
+        factory.Connection!.Close(1, "Closing for tests purposes");
         factory.WaitForConnected();
         
-        model = factory.ManagedChannel.CreateChannel();
+        model = factory.ChannelManager.CreateChannel().Channel!;
         model.QueueDeclarePassive("Test_Persistent_Queue");
         model.QueueDelete("Test_Persistent_Queue", true, true);
     }
@@ -59,7 +59,7 @@ public class T04_ChannelInfoTests
     public void T03_PersistentQueueWithDeadLetter()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
         
         var info = ChannelInfo.QueueWithDeadLetter("Test_Persistent_Queue_With_Deadletter");
         var ok = info.GetConsumerQueue(model);
@@ -78,7 +78,7 @@ public class T04_ChannelInfoTests
     public void T04_ThrowWhenGetConsumerQueueForExchangeWithoutQueue()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
 
         var info = ChannelInfo.FanoutExchange("Test_FanoutExchage");
         Assert.Throws<InvalidOperationException>(() => info.GetConsumerQueue(model));
@@ -88,7 +88,7 @@ public class T04_ChannelInfoTests
     public void T05_FanoutExchange_DeclareForPublish()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
 
         var info = ChannelInfo.FanoutExchange("Test_FanoutExchage_ForPublish");
         var address = info.GetPublicationAddress(model);
@@ -101,7 +101,7 @@ public class T04_ChannelInfoTests
     public async Task T06_FanoutExchange_DeclareForConsumeAsync()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
 
         var info = ChannelInfo.TemporaryQueue()
             .BindToFanout("Test_FanoutExchage_ForConsume");
@@ -116,7 +116,7 @@ public class T04_ChannelInfoTests
         model.Dispose();
         await Task.Delay(30);
 
-        model = factory.ManagedChannel.CreateChannel();
+        model = factory.ChannelManager.CreateChannel().Channel!;
         model.ExchangeDelete("Test_FanoutExchage_ForConsume", false);
     }
 
@@ -124,7 +124,7 @@ public class T04_ChannelInfoTests
     public void T07_RouteExchange_DeclareForPublish()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
 
         var info = ChannelInfo.RouteExchange("Test_RouteExchange_ForPublish", "Test.Route");
         var address = info.GetPublicationAddress(model);
@@ -137,7 +137,7 @@ public class T04_ChannelInfoTests
     public void T08_TopicExchange_DeclareForPublish()
     {
         using var factory = new ModelFactory();
-        var model = factory.ManagedChannel.CreateChannel();
+        var model = factory.ChannelManager.CreateChannel().Channel!;
 
         var info = ChannelInfo.TopicExchange("Test_TopicExchange_ForPublish", "Test.Topic");
         var address = info.GetPublicationAddress(model);
